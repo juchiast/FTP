@@ -16,3 +16,10 @@
 14. Chuyển sang trạng thái passive (passive)
 15. Thoát khỏi server (quit, exit)
 16. Phải hỗ trợ cả passive và active
+
+# Code mẫu
+https://github.com/jacklam718/ftp/blob/master/ftp_client.py
+
+https://github.com/python/cpython/blob/2.7/Lib/ftplib.py
+
+(Cái trên dùng cái dưới)
