@@ -20,6 +20,6 @@
 # Code mẫu
 https://github.com/jacklam718/ftp/blob/master/ftp_client.py
 
-https://github.com/python/cpython/blob/2.7/Lib/ftplib.py
+https://github.com/python/cpython/blob/2.7/Lib/ftplib.py - https://docs.python.org/2/library/ftplib.html
 
 (Cái trên dùng cái dưới)
