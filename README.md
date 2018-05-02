@@ -23,3 +23,9 @@ https://github.com/jacklam718/ftp/blob/master/ftp_client.py
 https://github.com/python/cpython/blob/2.7/Lib/ftplib.py - https://docs.python.org/2/library/ftplib.html
 
 (Cái trên dùng cái dưới)
+
+# abc
+
+- http://slacksite.com/other/ftp.html
+- https://www.ibm.com/developerworks/library/l-sockpit/
+- https://www.thegeekstuff.com/2011/12/c-socket-programming/
