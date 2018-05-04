@@ -1,6 +1,7 @@
 #ifndef _NET_HPP_
 #define _NET_HPP_
 #include <stdint.h>
+#include <stdlib.h>
 
 namespace net {
 class TcpStream {

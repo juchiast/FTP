@@ -6,6 +6,7 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+using namespace net;
 
 static struct sockaddr_in __get_address(const char *addr, uint16_t port) {
     uint32_t x = 0;
@@ -60,7 +61,6 @@ size_t TcpStream::write(void *buffer, size_t count) {
     return r;
 }
 
-
 void TcpStream::close_read() {
     if (shutdown(this->sockfd, SHUT_RD) == -1) {
         throw strerror(errno);
@@ -78,7 +78,5 @@ void TcpStream::close_both() {
     }
 }
 
-TcpStream::~TcpStream() {
-    this->close_both();
-}
+TcpStream::~TcpStream() { this->close_both(); }
 } // namespace net
