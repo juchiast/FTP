@@ -1,2 +1,3 @@
 - sockfd: socket file descriptor
 - AF_*: address family
+- htons: host to network short
