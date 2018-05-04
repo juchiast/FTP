@@ -1,0 +1,2 @@
+- sockfd: socket file descriptor
+- AF_*: address family
