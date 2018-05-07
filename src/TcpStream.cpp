@@ -8,19 +8,20 @@
 #include <sys/types.h>
 using namespace net;
 
-static struct sockaddr_in __get_address(const char *addr, uint16_t port) {
+static struct sockaddr_in __get_address(const char *ip, uint16_t port) {
     uint32_t x = 0;
-    int err_code = inet_pton(AF_INET, addr, &x);
+    int err_code = inet_pton(AF_INET, ip, &x);
     if (err_code == 0) {
         throw "Invalid address string";
     } else if (err_code == -1) {
         throw strerror(errno);
     }
-    struct sockaddr_in server;
-    server.sin_addr.s_addr = x;
-    server.sin_port = htons(port);
-    server.sin_family = AF_INET;
-    return server;
+    struct sockaddr_in addr;
+    addr.sin_addr.s_addr = x;
+    addr.sin_port = htons(port);
+    addr.sin_family = AF_INET;
+    memset(addr.sin_zero, 0, sizeof(addr.sin_zero));
+    return addr;
 }
 
 static int __connect(struct sockaddr_in addr) {
@@ -38,9 +39,7 @@ namespace net {
 TcpStream::TcpStream() {}
 
 TcpStream TcpStream::connect(const char *remote_ip, uint16_t remote_port) {
-    TcpStream t;
-    t.sockfd = __connect(__get_address(remote_ip, remote_port));
-    return t;
+    return from_raw(__connect(__get_address(remote_ip, remote_port)));
 }
 
 size_t TcpStream::read(void *buffer, size_t count) {
@@ -79,4 +78,10 @@ void TcpStream::close_both() {
 }
 
 TcpStream::~TcpStream() { this->close_both(); }
+
+TcpStream TcpStream::from_raw(int _sockfd) {
+    TcpStream t;
+    t.sockfd = _sockfd;
+    return t;
+}
 } // namespace net

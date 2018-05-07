@@ -2,9 +2,12 @@
 #include <iostream>
 
 int main() {
-    auto stream = net::TcpStream::connect("10.1.1.100", 12345);
-    for (char c; stream.read(&c, 1);) {
-        std::cout << c;
+    try {
+        auto listener = net::TcpListener::bind(10000);
+        auto stream1 = net::TcpStream::connect("127.0.0.1", 10000);
+        auto stream2 = listener.next();
+    } catch (const char *e) {
+        std::cout << e << std::endl;
     }
     return 0;
 }
