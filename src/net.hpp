@@ -20,6 +20,9 @@ public:
     void close_read();
     void close_write();
     void close_both();
+
+    TcpStream& operator=(const TcpStream &);
+    TcpStream(const TcpStream &);
 };
 
 class TcpListener {
