@@ -41,7 +41,7 @@ private:
     std::string buff;
 
 public:
-    Messenger(TcpStream&);
+    Messenger(const TcpStream&);
     ~Messenger();
     void send(void* buffer, int count);
     std::string receive();
