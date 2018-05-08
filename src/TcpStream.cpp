@@ -6,6 +6,7 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <unistd.h>
 using namespace net;
 
 static struct sockaddr_in __get_address(const char *ip, uint16_t port) {
@@ -83,5 +84,19 @@ TcpStream TcpStream::from_raw(int _sockfd) {
     TcpStream t;
     t.sockfd = _sockfd;
     return t;
+}
+
+TcpStream &TcpStream::operator=(const TcpStream &t) {
+    this->close_both();
+    this->sockfd = dup(t.sockfd);
+    if (this->sockfd == -1) {
+        throw strerror(errno);
+    }
+}
+TcpStream::TcpStream(const TcpStream &t) {
+    this->sockfd = dup(t.sockfd);
+    if (this->sockfd == -1) {
+        throw strerror(errno);
+    }
 }
 } // namespace net
