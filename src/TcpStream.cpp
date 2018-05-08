@@ -92,6 +92,7 @@ TcpStream &TcpStream::operator=(const TcpStream &t) {
     if (this->sockfd == -1) {
         throw strerror(errno);
     }
+    return *this;
 }
 TcpStream::TcpStream(const TcpStream &t) {
     this->sockfd = dup(t.sockfd);
