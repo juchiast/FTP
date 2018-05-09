@@ -73,9 +73,7 @@ void TcpStream::close_write() {
     }
 }
 void TcpStream::close_both() {
-    if (shutdown(this->sockfd, SHUT_RDWR) == -1) {
-        throw strerror(errno);
-    }
+    shutdown(this->sockfd, SHUT_RDWR);
 }
 
 TcpStream::~TcpStream() { this->close_both(); }
