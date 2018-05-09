@@ -14,3 +14,5 @@ set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -fdiagnostics-color=auto")
 file(GLOB SRC "src/*.cpp")
 
 add_executable(ftp ${SRC})
+
+target_link_libraries(ftp readline)
