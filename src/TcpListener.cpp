@@ -22,6 +22,10 @@ static int __bind(struct sockaddr_in addr) {
     if (sock == -1) {
         throw strerror(errno);
     }
+    int temp = 1;
+    if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &temp, sizeof(int)) == -1) {
+        throw strerror(errno);
+    }
     if (bind(sock, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
         throw strerror(errno);
     }
