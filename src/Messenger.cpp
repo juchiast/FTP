@@ -14,11 +14,20 @@ void Messenger::send(void* buffer, int count) {
     tmp[count] = '\r';
     tmp[count + 1] = '\n';
     streamfd.write(tmp, count + 2);
+    delete[] tmp;
 }
 
-void Messenger::receive() {
-    int x = has_command();
+int Messenger::pos_first_cmd() {
+    static size_t p = 0;
+    while (p < buff.size() && buff[p] != '\n');
+    if (p == buff.size())
+        p = -1;
+    return p;
+}
 
+std::string Messenger::receive() {
+    // int x = has_command();
+    return "";
 }
 
 Messenger::~Messenger() {

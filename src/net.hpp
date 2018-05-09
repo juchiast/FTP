@@ -43,6 +43,7 @@ private:
 public:
     Messenger(const TcpStream&);
     ~Messenger();
+    int pos_first_cmd();
     void send(void* buffer, int count);
     std::string receive();
 };
