@@ -1,5 +1,6 @@
 #include "net.hpp"
 #include <string.h>
+#define LEN_BUFFER 100
 
 namespace net {
 
@@ -18,7 +19,7 @@ void Messenger::send(void* buffer, int count) {
 }
 
 int Messenger::pos_first_cmd() {
-    static size_t p = 0;
+    size_t p = 0;
     while (p < buff.size() && buff[p] != '\n');
     if (p == buff.size())
         p = -1;
@@ -26,8 +27,13 @@ int Messenger::pos_first_cmd() {
 }
 
 std::string Messenger::receive() {
-    // int x = has_command();
-    return "";
+    char tmp[LEN_BUFFER + 2];
+    while (pos_first_cmd() == -1) {
+        streamfd.read(tmp, LEN_BUFFER);
+        buff += std::string(tmp);
+    }
+    
+    return buff.substr(0, pos_first_cmd());
 }
 
 Messenger::~Messenger() {
