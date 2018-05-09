@@ -28,9 +28,13 @@ static int __bind(struct sockaddr_in addr) {
     return sock;
 }
 
+static void __close(int fd) {
+    close(fd);
+}
+
 namespace net {
 TcpListener::~TcpListener() {
-    close(this->listenfd);
+    this->close();
 }
 TcpListener TcpListener::bind(uint16_t local_port) {
     TcpListener t;
@@ -48,4 +52,26 @@ TcpStream TcpListener::next() {
     }
     return TcpStream::from_raw(sockfd);
 }
+
+TcpListener &TcpListener::operator=(const TcpListener &t) {
+    this->close();
+    this->listenfd = dup(t.listenfd);
+    if (this->listenfd == -1) {
+        throw strerror(errno);
+    }
+    return *this;
+}
+
+TcpListener::TcpListener(const TcpListener &t) {
+    this->listenfd = dup(t.listenfd);
+    if (this->listenfd == -1) {
+        throw strerror(errno);
+    }
+}
+
+void TcpListener::close() {
+    __close(this->listenfd);
+}
+
+TcpListener::TcpListener() {}
 } // namespace net
