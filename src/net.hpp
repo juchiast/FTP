@@ -28,11 +28,16 @@ public:
 class TcpListener {
 private:
     int listenfd;
+    TcpListener();
 
 public:
     ~TcpListener();
     static TcpListener bind(uint16_t local_port);
     TcpStream next();
+
+    TcpListener(const TcpListener &);
+    TcpListener &operator=(const TcpListener &);
+    void close();
 };
 
 class Messenger {

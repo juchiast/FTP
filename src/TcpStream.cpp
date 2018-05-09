@@ -94,6 +94,7 @@ TcpStream &TcpStream::operator=(const TcpStream &t) {
     }
     return *this;
 }
+
 TcpStream::TcpStream(const TcpStream &t) {
     this->sockfd = dup(t.sockfd);
     if (this->sockfd == -1) {
