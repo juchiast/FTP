@@ -2,15 +2,16 @@
 #define _NET_HPP_
 #include <stdint.h>
 #include <stdlib.h>
+#include <string>
 
 namespace net {
-
+    
 class TcpStream {
 private:
     int sockfd;
-    TcpStream();
 
 public:
+    TcpStream();
     ~TcpStream();
     static TcpStream connect(const char *remote_ip, uint16_t remote_port);
     static TcpStream from_raw(int sockfd);
@@ -37,6 +38,18 @@ public:
     TcpListener(const TcpListener &);
     TcpListener &operator=(const TcpListener &);
     void close();
+};
+
+class Messenger {
+private:
+    TcpStream streamfd;
+    std::string buff;
+
+public:
+    Messenger(const TcpStream&);
+    ~Messenger();
+    void send(void* buffer, int count);
+    std::string receive();
 };
 } // namespace net
 #endif
