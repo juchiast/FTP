@@ -9,69 +9,135 @@
 #include <stdlib.h>
 #include <map>
 #include <unistd.h>
+#include <vector>
+
+const int maxFile = 100;
 
 //Cac cau truc yeu cau
-enum command_type{
+enum class commandType{
     LOGIN,
-    HELP
+    HELP, 
+    LIST_FILE,
+    PUT,
+    GET,
+    MPUT,
+    MGET,
+    CD,
+    LCD,
+    DELETE,
+    MDELETE,
+    MKDIR,
+    RMKDIR,
+    PWD,
+    PASSIVE,
+    EXIT
 };
 
 //Menu cua cac lenh
-std::map<std::string, enum command_type> command_menu = {
-    { "login", LOGIN },
-    { "help", HELP}
+std::map<const std::string, const enum commandType> commandMenu = {
+    { "login", commandType::LOGIN },
+    { "help", commandType::HELP},
+    {"ls", commandType::LIST_FILE},
+    {"dir", commandType::LIST_FILE},
+    {"put", commandType::PUT},
+    {"mput", commandType::MPUT},
+    {"get", commandType::GET},
+    {"mget", commandType::MGET},
+    {"cd", commandType::CD},
+    {"lcd", commandType::LCD},
+    {"delete", commandType::DELETE},
+    {"mdelete", commandType::MDELETE},
+    {"mkdir", commandType::MKDIR},
+    {"rmkdir", commandType::RMKDIR},
+    {"pwd", commandType::PWD},
+    {"passive", commandType::PASSIVE},
+    {"quit", commandType::EXIT},
+    {"exit", commandType::EXIT}
 };
 
 //Cau truc login
 struct login{
-    std::string ip;
+    std::string ip = "";
     uint16_t port = 21;
-    std::string user_name;
-    std::string password;
+    std::string userName = "";
+    std::string password = "";
 };
 
 //Kieu du dieu command
 struct command{
-    enum command_type type;
+    enum commandType type;
     void* value = NULL;
 };
 
-login* input_login(std::string str){
+std::string myReadline(const char* prompt){
+    char* tmp = readline(prompt);
+    std::string str;
+    if (tmp) 
+        str.assign(tmp);
+    free(tmp);
+    return str;
+}
+
+login* inputLogin(const std::string str){
     login* info = new login();
+    char* tmp;
 
     if (str != ""){
         info->ip = str;    
     } else {
-        info->ip = readline("(to) ");
+        info->ip = myReadline("(to) ");
     }
 
-    //connect 
-    /*auto stream_client = net::TcpStream::connect(info->ip, info->port);
-    if (stream_client) {
-        std:: cout << "Connect to " << info->ip << " success!" << std::endl;
-    }*/
+    info->userName = myReadline("Name: ");
 
-    info->user_name = readline("Name: ");
-    info->password = getpass("Pass: ");
+    tmp = getpass("Pass: ");
+    if (tmp) info->password = getpass("Pass: ");
 
-    //std::cout << "Name: " << info->user_name << std:: endl;
-    //std::cout << "Pass: " << info->password << std::endl;
     return info;
 }
 
-command read_command(){
+std::vector<std::string> readDir(const std::string str){
+    std::vector<std::string> dirFiles;
+
+    int spacePos;
+    int currPos = 0;
+    int i = 0;
+    int prevPos = 0;
+
+    do{
+        spacePos = str.find(" ",currPos);
+
+        if(spacePos >= 0){
+            currPos = spacePos;
+            dirFiles.push_back(str.substr(prevPos, currPos - prevPos));
+            currPos++;
+            prevPos = currPos;
+        }
+
+    } while( spacePos >= 0);
+    
+    for (int i = 0; i < dirFiles.size(); i++)
+        std::cout << dirFiles[i] << std::endl;
+    return dirFiles;
+}
+
+command readCommand(){
     std::string input_string;
-    input_string = readline("ftp>");
+    input_string = myReadline("ftp>");
 //Lay yeu cau
     int pos = input_string.find(" ");
     std::string cmd_string = input_string.substr(0, pos);
     input_string.erase(0, pos);
     
     command cmd;
-    cmd.type = command_menu[cmd_string];
+    cmd.type = commandMenu[cmd_string];
     switch (cmd.type){
-        case LOGIN:
-            cmd.value = input_login(input_string);
+        case commandType::LOGIN:
+            cmd.value = inputLogin(input_string);
+            break;
+        case commandType::GET:
+            std::vector<std::string> tmp = readDir(input_string);
+            cmd.value = &tmp;
             break;
     }
 

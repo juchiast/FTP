@@ -5,7 +5,7 @@
 
 int main() {
     try {
-       read_command();
+       readCommand();
         
     } catch (const char *e) {
         std::cout << e << std::endl;
