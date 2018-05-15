@@ -52,7 +52,7 @@ size_t TcpStream::read(void *buffer, size_t count) {
     return r;
 }
 
-size_t TcpStream::write(void *buffer, size_t count) {
+size_t TcpStream::write(const void *buffer, size_t count) {
     // TODO what happen when remote close the connection
     auto r = send(this->sockfd, buffer, count, 0);
     if (r < 0) {

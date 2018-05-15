@@ -15,7 +15,7 @@ public:
     ~TcpStream();
     static TcpStream connect(const char *remote_ip, uint16_t remote_port);
     static TcpStream from_raw(int sockfd);
-    size_t write(void *buffer, size_t count);
+    size_t write(const void *buffer, size_t count);
     size_t read(void *buffer, size_t count);
     void close_read();
     void close_write();
@@ -49,7 +49,7 @@ public:
     Messenger(const TcpStream&);
     ~Messenger();
     int len_first_cmd();
-    void send(const void* buffer, int count);
+    void send(const std::string &);
     std::string receive();
 };
 } // namespace net

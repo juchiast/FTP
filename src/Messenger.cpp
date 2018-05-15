@@ -3,17 +3,15 @@
 #include <string.h>
 #define LEN_BUFFER 100
 
+const char CRLF[] = "\r\n";
+
 namespace net {
 
 Messenger::Messenger(const TcpStream &ts) : stream(ts) {}
 
-void Messenger::send(const void *buffer, int count) {
-    char *tmp = new char[count + 2];
-    memcpy(tmp, buffer, count);
-    tmp[count] = '\r';
-    tmp[count + 1] = '\n';
-    stream.write(tmp, count + 2);
-    delete[] tmp;
+void Messenger::send(const std::string &msg) {
+    stream.write(msg.c_str(), msg.length());
+    stream.write(CRLF, 2);
 }
 
 // return 0 if not exits cmd

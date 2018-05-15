@@ -9,9 +9,9 @@ int main() {
         char name[] = "USER user";
         char passwd[] = "PASS pass";
 
-        mess_client.send(name, sizeof(name) - 1);
-        mess_client.send(passwd, sizeof(passwd) - 1);
-        mess_client.send("FEAT", 4);
+        mess_client.send(name);
+        mess_client.send(passwd);
+        mess_client.send("FEAT");
         while (1) {
             std::cout << mess_client.receive() << std::endl;
         }
