@@ -1,6 +1,7 @@
 #include "net.hpp"
 #include <arpa/inet.h>
 #include <errno.h>
+#include <iostream>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <string.h>
@@ -72,15 +73,11 @@ void TcpStream::close_write() {
         throw strerror(errno);
     }
 }
-void TcpStream::close_both() {
-    shutdown(this->sockfd, SHUT_RDWR);
-}
+void TcpStream::close_both() { shutdown(this->sockfd, SHUT_RDWR); }
 
-TcpStream::~TcpStream() { this->close_both(); }
+TcpStream::~TcpStream() { close(this->sockfd); }
 
-TcpStream::TcpStream(int _sockfd) {
-    this->sockfd = _sockfd;
-}
+TcpStream::TcpStream(int _sockfd) { this->sockfd = _sockfd; }
 
 TcpStream &TcpStream::operator=(const TcpStream &t) {
     this->close_both();

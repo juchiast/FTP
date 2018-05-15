@@ -5,7 +5,7 @@
 #include <string>
 
 namespace net {
-    
+
 class TcpStream {
 private:
     int sockfd;
@@ -21,7 +21,7 @@ public:
     void close_write();
     void close_both();
 
-    TcpStream& operator=(const TcpStream &);
+    TcpStream &operator=(const TcpStream &);
     TcpStream(const TcpStream &);
 };
 
@@ -48,10 +48,30 @@ private:
     int len_first_cmd();
 
 public:
-    Messenger(const TcpStream&);
+    Messenger(const TcpStream &);
     ~Messenger();
     void send(const std::string &);
     std::string receive();
+};
+
+struct Reply {
+    int code;
+    std::string reply;
+};
+
+class Ftp {
+
+private:
+    Messenger *cc = NULL;
+
+    Reply read_reply();
+
+public:
+    ~Ftp();
+    Ftp();
+    void login(const std::string &ip, uint16_t port, const std::string &name,
+               const std::string &passwd);
+    void list(const std::string &path = "");
 };
 } // namespace net
 #endif
