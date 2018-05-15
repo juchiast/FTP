@@ -9,9 +9,9 @@ namespace net {
 class TcpStream {
 private:
     int sockfd;
+    TcpStream();
 
 public:
-    TcpStream();
     ~TcpStream();
     static TcpStream connect(const char *remote_ip, uint16_t remote_port);
     static TcpStream from_raw(int sockfd);

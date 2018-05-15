@@ -5,10 +5,7 @@
 
 namespace net {
 
-Messenger::Messenger(const TcpStream &ts) {
-    stream = ts;
-    buff = "";
-}
+Messenger::Messenger(const TcpStream &ts) : stream(ts) {}
 
 void Messenger::send(const void *buffer, int count) {
     char *tmp = new char[count + 2];
