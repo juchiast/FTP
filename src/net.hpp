@@ -42,7 +42,7 @@ public:
 
 class Messenger {
 private:
-    TcpStream streamfd;
+    TcpStream stream;
     std::string buff;
 
 public:

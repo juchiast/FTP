@@ -3,20 +3,14 @@
 
 int main() {
     try {
-        auto stream_client = net::TcpStream::connect("127.0.0.1", 21);
+        auto stream_client = net::TcpStream::connect("10.1.1.100", 21);
         auto mess_client = net::Messenger(stream_client);
 
-        std::cout << mess_client.receive() << std::endl;
-
-        char name[] = "USER qcuong98";
-        char passwd[] = "PASS 071098";
+        char name[] = "USER user";
+        char passwd[] = "PASS pass";
 
         mess_client.send(name, sizeof(name) - 1);
-        std::cout << mess_client.receive() << std::endl;
-
         mess_client.send(passwd, sizeof(passwd) - 1);
-        std::cout << mess_client.receive() << std::endl;
-
         mess_client.send("FEAT", 4);
         while (1) {
             std::cout << mess_client.receive() << std::endl;
