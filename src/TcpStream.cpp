@@ -39,8 +39,8 @@ static int __connect(struct sockaddr_in addr) {
 namespace net {
 TcpStream::TcpStream() {}
 
-TcpStream TcpStream::connect(const char *remote_ip, uint16_t remote_port) {
-    return from_raw(__connect(__get_address(remote_ip, remote_port)));
+TcpStream::TcpStream(const char *remote_ip, uint16_t remote_port) {
+    this->sockfd = __connect(__get_address(remote_ip, remote_port));
 }
 
 size_t TcpStream::read(void *buffer, size_t count) {
@@ -78,10 +78,8 @@ void TcpStream::close_both() {
 
 TcpStream::~TcpStream() { this->close_both(); }
 
-TcpStream TcpStream::from_raw(int _sockfd) {
-    TcpStream t;
-    t.sockfd = _sockfd;
-    return t;
+TcpStream::TcpStream(int _sockfd) {
+    this->sockfd = _sockfd;
 }
 
 TcpStream &TcpStream::operator=(const TcpStream &t) {

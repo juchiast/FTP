@@ -54,7 +54,7 @@ TcpStream TcpListener::next() {
     if (sockfd < 0) {
         throw strerror(errno);
     }
-    return TcpStream::from_raw(sockfd);
+    return TcpStream(sockfd);
 }
 
 TcpListener &TcpListener::operator=(const TcpListener &t) {

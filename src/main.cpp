@@ -3,7 +3,7 @@
 
 int main() {
     try {
-        auto stream_client = net::TcpStream::connect("10.1.1.100", 21);
+        auto stream_client = net::TcpStream("10.1.1.100", 21);
         auto mess_client = net::Messenger(stream_client);
 
         char name[] = "USER user";

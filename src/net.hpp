@@ -13,8 +13,8 @@ private:
 
 public:
     ~TcpStream();
-    static TcpStream connect(const char *remote_ip, uint16_t remote_port);
-    static TcpStream from_raw(int sockfd);
+    TcpStream(const char *remote_ip, uint16_t remote_port);
+    TcpStream(int sockfd);
     size_t write(const void *buffer, size_t count);
     size_t read(void *buffer, size_t count);
     void close_read();
