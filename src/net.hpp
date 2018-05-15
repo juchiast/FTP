@@ -45,10 +45,11 @@ private:
     TcpStream stream;
     std::string buff;
 
+    int len_first_cmd();
+
 public:
     Messenger(const TcpStream&);
     ~Messenger();
-    int len_first_cmd();
     void send(const std::string &);
     std::string receive();
 };
