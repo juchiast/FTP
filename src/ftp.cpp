@@ -11,16 +11,28 @@ static char __STR[1024];
         sprintf(__STR, fmt, ##__VA_ARGS__);                                    \
         std::cout << __STR << std::endl;                                       \
     }
-
 #define R(x)                                                                   \
     { std::cout << (x).reply; }
 
+/*
+ * FTP reply starts with a three-digit number indicating reply's code.
+ *
+ * This function should only be called after `is_final_reply` or
+ * `is_half_reply`, because it doesn't perform any check on the input.
+ * */
 static int get_reply_code(const string &rep) {
     return (rep[0] - 48) * 100 + (rep[1] - 48) * 10 + (rep[2] - 48);
 }
 
 static bool is_num(char c) { return c <= '9' && c >= '0'; }
 
+/*
+ * For multi-line reply, FTP begins a reply sequence with "AAA-Some text"
+ * and ends with "AAA Some optional text".
+ *
+ * This this implementation, "AAA-" is called a "half reply" and
+ * "AAA " is called a "final reply".
+ * */
 static bool is_final_reply(const string &rep) {
     return rep.length() >= 3 && is_num(rep[0]) && is_num(rep[1]) &&
            is_num(rep[2]) && (rep.length() == 3 || rep[3] == ' ');
@@ -31,11 +43,27 @@ static bool is_half_reply(const string &rep) {
            is_num(rep[2]) && rep[3] == '-';
 }
 
+/*
+ * Reply code 227 has six numbers indication IP address and port,
+ * separated by ',':
+ * XX,XX,XX,XX,XX,XX
+ *
+ * This struct and the below function parses 227 reply.
+ * */
 struct __227Result {
     string ip;
     uint16_t port;
 };
 
+/*
+ * Parse 227 reply.
+ *
+ * Crash if the code is not 227.
+ * Throw is the code is 227 but doesn't contain valid data.
+ *
+ * Invalid data means it doesn't contain six numbers separated by ',',
+ * or one of these number is not in the range [0, 255].
+ * */
 static __227Result __parse_227_reply(const ftp::Reply &rep) {
     assert(rep.code == 227);
     static const std::regex re(R"((\d+),(\d+),(\d+),(\d+),(\d+),(\d+))");
@@ -61,11 +89,13 @@ static __227Result __parse_227_reply(const ftp::Reply &rep) {
     }
 }
 
+// Catch network error, print it then return.
 #define __catch_net                                                            \
     catch (char *e) {                                                          \
         _("Error: %s", e);                                                     \
         return;                                                                \
     }
+// Catch invalid reply of server, print it then return.
 #define __catch_rep                                                            \
     catch (Reply r) {                                                          \
         _("Server return invalid reply: \n%s", r.reply.c_str());               \
@@ -74,6 +104,47 @@ static __227Result __parse_227_reply(const ftp::Reply &rep) {
 
 namespace ftp {
 
+/*
+ * Note on try-catch writting:
+ *
+ * Every public functions of this class must not throw.
+ * Error must be handled inside the function.
+ * Which means that every lines of code must be wrapped in
+ * a try-catch block.
+ *
+ * Most of the error handling in this code is just printing it out,
+ * use `__catch_net` and `__catch_rep` macros if you don't need special
+ * logic for error handling.
+ *
+ * For private functions, if no special error handling is needed,
+ * it must not catch the error, let the caller catch it.
+ * And if server's reply is invalid, it must be thrown.
+ *
+ * At this time, only two things are thrown:
+ * - `char *`, for network errors
+ * - `struct Reply`, for invalid reply from server (only invalid,
+ *   negative reply must not thrown).
+ *
+ * */
+
+/*
+ * Note on implementation:
+ *
+ * For each FTP command sent, there are one or more replies.
+ * And for a reply, there can be other replies follow it.
+ *
+ * All reply sequences and meaning of each reply is documented
+ * in RFC 959: https://tools.ietf.org/html/rfc959 .
+ * Some replies are documented in 'doc/commands.txt'.
+ *
+ * Implementation must handle all possible replies for each command.
+ *
+ * There is the `_()` macro to help on printing formatted string,
+ * and `R()` to print `struct Reply`.
+ *
+ * Sometime, logic for positive and negative reply handling is not different,
+ * but they should be handle separately.
+ * */
 Ftp::Ftp() {}
 Ftp::~Ftp() {
     if (this->cc != NULL) {
@@ -81,12 +152,17 @@ Ftp::~Ftp() {
     }
 }
 
+/*
+ * Connect (or reconnect) to server,
+ * then send username and password to login.
+ * */
 void Ftp::login(const string &ip, uint16_t port, const string &name,
                 const string &passwd) {
 
     // Connect to the server
     try {
         if (this->cc != NULL) {
+            // TODO should close the connection properly
             delete this->cc;
         }
         _("Connecting to server %s:%d", ip.c_str(), port);
@@ -160,6 +236,15 @@ void Ftp::login(const string &ip, uint16_t port, const string &name,
     __catch_net __catch_rep;
 }
 
+/*
+ * Directory listing.
+ *
+ * First, send `PORT` or `PASV` to setup
+ * data connection establishment method.
+ *
+ * Then, send LIST command, open data connection,
+ * and handle replies.
+ * */
 void Ftp::list(const string &path) {
     try {
         if (!this->port_pasv()) {
@@ -204,6 +289,9 @@ void Ftp::list(const string &path) {
     __catch_net __catch_rep;
 }
 
+/*
+ * Open data connection, according to current mode (active or passive).
+ * */
 net::TcpStream Ftp::setup_data_connection() {
     if (this->active) {
         throw "Not implemented";
@@ -212,6 +300,13 @@ net::TcpStream Ftp::setup_data_connection() {
     return net::TcpStream(this->dc_param.ip.c_str(), this->dc_param.port);
 }
 
+/*
+ * Read a reply.
+ * The returned struct contains reply's code in number,
+ * and the full text recieved.
+ *
+ * Reply can contain single or multiple lines.
+ * */
 Reply Ftp::read_reply() {
     Reply rep;
     rep.code = 0;
@@ -240,6 +335,9 @@ Reply Ftp::read_reply() {
     }
 }
 
+/*
+ * Send PORT or PASV to setup control connection establishment method.
+ * */
 bool Ftp::port_pasv() {
     if (this->active) {
         throw "Not implemented";

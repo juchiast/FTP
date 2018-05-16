@@ -7,8 +7,19 @@ const char CRLF[] = "\r\n";
 
 namespace net {
 
+/*
+ * FTP use <CRLF> to end a message (either a command or reply).
+ *
+ * This class provides functions to send and receive messages.
+ *
+ * All functions may throw because of network errors.
+ * */
 Messenger::Messenger(const TcpStream &ts) : stream(ts) {}
 
+/*
+ * Send a message.
+ * <CRLF> is automatically appended to the message.
+ * */
 void Messenger::send(const std::string &msg) {
     auto buf = msg + CRLF;
     stream.write(buf.c_str(), buf.length());
@@ -24,6 +35,10 @@ int Messenger::len_first_cmd() {
     return p + 1;
 }
 
+/*
+ * Receive a message.
+ * <CRLF> is automatically removed.
+ * */
 std::string Messenger::receive() {
     char tmp[LEN_BUFFER + 2];
 

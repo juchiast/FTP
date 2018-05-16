@@ -5,6 +5,8 @@
 #include <string>
 #include <vector>
 
+// TODO remove default constructor
+
 namespace net {
 
 struct ReadAll {
@@ -22,15 +24,15 @@ public:
     ~TcpStream();
     TcpStream(const char *remote_ip, uint16_t remote_port);
     TcpStream(int sockfd);
+    TcpStream(const TcpStream &);
+    TcpStream &operator=(const TcpStream &);
+
     size_t write(const void *buffer, size_t count);
     size_t read(void *buffer, size_t count);
     ReadAll read_all();
     void close_read();
     void close_write();
     void close_both();
-
-    TcpStream &operator=(const TcpStream &);
-    TcpStream(const TcpStream &);
 };
 
 class TcpListener {
@@ -40,7 +42,7 @@ private:
 
 public:
     ~TcpListener();
-    static TcpListener bind(uint16_t local_port);
+    TcpListener(uint16_t local_port);
     TcpStream next();
 
     TcpListener(const TcpListener &);
