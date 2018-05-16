@@ -166,7 +166,7 @@ void Ftp::list(const string &path) {
             return;
         }
         this->cc->send(path.empty() ? "LIST" : "LIST " + path);
-        auto conn = this->setup_data_connection();
+        auto dc = this->setup_data_connection();
         auto rep = this->read_reply();
         switch (rep.code) {
         case 450:
@@ -180,17 +180,12 @@ void Ftp::list(const string &path) {
         case 125:
         case 150: {
             R(rep);
-            char *buf = new char[1024];
-            auto size = conn.read(buf, 1024);
-            buf[size] = 0;
-            std::string s = buf;
-            delete[] buf;
+            std::cout << dc.read_all().str();
             rep = this->read_reply();
             switch (rep.code) {
             case 226:
             case 250:
                 R(rep);
-                _("%s", s.c_str());
                 return;
             case 425:
             case 426:

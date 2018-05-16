@@ -94,4 +94,27 @@ TcpStream::TcpStream(const TcpStream &t) {
         throw strerror(errno);
     }
 }
+
+#define BUF_SIZE 4069
+
+ReadAll TcpStream::read_all() {
+    ReadAll ret;
+    std::vector<uint8_t> buffer(BUF_SIZE);
+    size_t size;
+    while (0 != (size = this->read(buffer.data(), BUF_SIZE))) {
+        ret.data.insert(ret.data.end(), buffer.begin(), buffer.begin() + size);
+    }
+    return ret;
+}
+
+std::string ReadAll::str() const {
+    std::string ret;
+    for (uint8_t c: this->data) {
+        if (c == 0) {
+            break;
+        }
+        ret += c;
+    }
+    return ret;
+}
 } // namespace net

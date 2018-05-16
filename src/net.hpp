@@ -3,8 +3,15 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string>
+#include <vector>
 
 namespace net {
+
+struct ReadAll {
+    std::vector<uint8_t> data;
+
+    std::string str() const;
+};
 
 class TcpStream {
 private:
@@ -17,6 +24,7 @@ public:
     TcpStream(int sockfd);
     size_t write(const void *buffer, size_t count);
     size_t read(void *buffer, size_t count);
+    ReadAll read_all();
     void close_read();
     void close_write();
     void close_both();
