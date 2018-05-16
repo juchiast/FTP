@@ -1,8 +1,8 @@
-#include "net.hpp"
+#include "ftp.hpp"
 #include <iostream>
 
 int main() {
-    net::Ftp f;
+    ftp::Ftp f;
     f.login("10.1.1.100", 21, "user", "pass");
     return 0;
 }

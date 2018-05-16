@@ -54,24 +54,5 @@ public:
     std::string receive();
 };
 
-struct Reply {
-    int code;
-    std::string reply;
-};
-
-class Ftp {
-
-private:
-    Messenger *cc = NULL;
-
-    Reply read_reply();
-
-public:
-    ~Ftp();
-    Ftp();
-    void login(const std::string &ip, uint16_t port, const std::string &name,
-               const std::string &passwd);
-    void list(const std::string &path = "");
-};
 } // namespace net
 #endif
