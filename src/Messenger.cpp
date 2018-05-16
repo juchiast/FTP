@@ -10,8 +10,8 @@ namespace net {
 Messenger::Messenger(const TcpStream &ts) : stream(ts) {}
 
 void Messenger::send(const std::string &msg) {
-    stream.write(msg.c_str(), msg.length());
-    stream.write(CRLF, 2);
+    auto buf = msg + CRLF;
+    stream.write(buf.c_str(), buf.length());
 }
 
 // return 0 if not exits cmd

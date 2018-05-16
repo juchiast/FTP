@@ -14,8 +14,17 @@ class Ftp {
 
 private:
     net::Messenger *cc = NULL;
+    bool active = false;
+
+    struct {
+        std::string ip;
+        uint16_t port = 0;
+    } dc_param;
 
     Reply read_reply();
+
+    bool port_pasv();
+    net::TcpStream setup_data_connection();
 
 public:
     ~Ftp();
@@ -24,6 +33,5 @@ public:
                const std::string &passwd);
     void list(const std::string &path = "");
 };
-};
-
+} // namespace ftp
 #endif

@@ -10,7 +10,7 @@
 120: Service ready in nnn minutes.
 125: Data connection already open; transfer starting.
 150: File status okay; about to open data connection.
-         200 Command okay.
+200: Command okay.
 202: Command not implemented, superfluous at this site.
 211: System status, or system help reply.
 212: Directory status.
@@ -87,3 +87,18 @@
     530
     500, 501, 503, 421
     332
+
+## PASV
+- Format: PASV <CRLF>
+- Return codes:
+    227
+    500, 501, 502, 421, 530
+
+## LIST
+- Format: LIST <SP> [<path>] <CRLF>
+- Return codes:
+    125, 150
+        226, 250
+        425, 426, 451
+    450
+    500, 501, 502, 421, 530

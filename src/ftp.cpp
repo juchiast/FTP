@@ -1,5 +1,7 @@
 #include "ftp.hpp"
+#include <cassert>
 #include <iostream>
+#include <regex>
 
 using std::string;
 
@@ -27,6 +29,36 @@ static bool is_final_reply(const string &rep) {
 static bool is_half_reply(const string &rep) {
     return rep.length() >= 4 && is_num(rep[0]) && is_num(rep[1]) &&
            is_num(rep[2]) && rep[3] == '-';
+}
+
+struct __227Result {
+    string ip;
+    uint16_t port;
+};
+
+static __227Result __parse_227_reply(const ftp::Reply &rep) {
+    assert(rep.code == 227);
+    static const std::regex re(R"((\d+),(\d+),(\d+),(\d+),(\d+),(\d+))");
+    std::smatch sm;
+    if (std::regex_search(rep.reply, sm, re)) {
+        assert(sm.size() == 7);
+        int nums[6];
+        for (size_t i = 1; i <= 6; i++) {
+            int x = std::atoi(sm[i].str().c_str());
+            if (x < 0 || x > 255) {
+                throw rep;
+            }
+            nums[i - 1] = x;
+        }
+        __227Result ret;
+        char buf[16];
+        sprintf(buf, "%d.%d.%d.%d", nums[0], nums[1], nums[2], nums[3]);
+        ret.ip = buf;
+        ret.port = (nums[4] << 8) | nums[5];
+        return ret;
+    } else {
+        throw rep;
+    }
 }
 
 #define __catch_net                                                            \
@@ -128,6 +160,63 @@ void Ftp::login(const string &ip, uint16_t port, const string &name,
     __catch_net __catch_rep;
 }
 
+void Ftp::list(const string &path) {
+    try {
+        if (!this->port_pasv()) {
+            return;
+        }
+        this->cc->send(path.empty() ? "LIST" : "LIST " + path);
+        auto conn = this->setup_data_connection();
+        auto rep = this->read_reply();
+        switch (rep.code) {
+        case 450:
+        case 500:
+        case 501:
+        case 502:
+        case 421:
+        case 530:
+            R(rep);
+            return;
+        case 125:
+        case 150: {
+            R(rep);
+            char *buf = new char[1024];
+            auto size = conn.read(buf, 1024);
+            buf[size] = 0;
+            std::string s = buf;
+            delete[] buf;
+            rep = this->read_reply();
+            switch (rep.code) {
+            case 226:
+            case 250:
+                R(rep);
+                _("%s", s.c_str());
+                return;
+            case 425:
+            case 426:
+            case 451:
+                R(rep);
+                return;
+            default:
+                throw rep;
+            }
+            return;
+        }
+        default:
+            throw rep;
+        }
+    }
+    __catch_net __catch_rep;
+}
+
+net::TcpStream Ftp::setup_data_connection() {
+    if (this->active) {
+        throw "Not implemented";
+    }
+
+    return net::TcpStream(this->dc_param.ip.c_str(), this->dc_param.port);
+}
+
 Reply Ftp::read_reply() {
     Reply rep;
     rep.code = 0;
@@ -153,6 +242,34 @@ Reply Ftp::read_reply() {
         } else if (rep.code == 0) {
             throw rep;
         }
+    }
+}
+
+bool Ftp::port_pasv() {
+    if (this->active) {
+        throw "Not implemented";
+    }
+    this->cc->send("PASV");
+    auto rep = this->read_reply();
+    switch (rep.code) {
+    case 227: {
+        R(rep);
+        auto ret = __parse_227_reply(rep);
+        this->dc_param.ip = ret.ip;
+        this->dc_param.port = ret.port;
+        return true;
+    }
+    case 500:
+    case 501:
+    case 502:
+    case 421:
+    case 530:
+        R(rep);
+        this->dc_param.ip = "";
+        this->dc_param.port = 0;
+        return false;
+    default:
+        throw rep;
     }
 }
 
