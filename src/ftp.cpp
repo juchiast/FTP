@@ -51,10 +51,15 @@ Ftp::~Ftp() {
 
 void Ftp::login(const string &ip, uint16_t port, const string &name,
                 const string &passwd) {
+
+    // Connect to the server
     try {
+        if (this->cc != NULL) {
+            delete this->cc;
+        }
         _("Connecting to server %s:%d", ip.c_str(), port);
         this->cc = new net::Messenger(net::TcpStream(ip.c_str(), port));
-        auto rep = read_reply();
+        auto rep = this->read_reply();
         if (rep.code == 120) {
             R(rep);
             rep = read_reply();
@@ -65,9 +70,62 @@ void Ftp::login(const string &ip, uint16_t port, const string &name,
         } else if (rep.code == 421) {
             R(rep);
             return;
+        } else {
+            throw rep;
         }
     }
-    __catch_net __catch_rep
+    __catch_net __catch_rep;
+
+    // Send username
+    try {
+        _("Sending username");
+        this->cc->send("USER " + name);
+        auto rep = this->read_reply();
+        switch (rep.code) {
+        case 230:
+            R(rep);
+            return;
+        case 331:
+            R(rep);
+            break;
+        case 530:
+        case 500:
+        case 501:
+        case 421:
+        case 332:
+            R(rep);
+            _("Login failed")
+            return;
+        default:
+            throw rep;
+        }
+    }
+    __catch_net __catch_rep;
+
+    // Send password
+    try {
+        _("Sending password");
+        this->cc->send("PASS " + passwd);
+        auto rep = this->read_reply();
+        switch (rep.code) {
+        case 230:
+            R(rep);
+            return;
+        case 202:
+        case 530:
+        case 500:
+        case 501:
+        case 503:
+        case 421:
+        case 332:
+            R(rep);
+            _("Login failed");
+            return;
+        default:
+            throw rep;
+        }
+    }
+    __catch_net __catch_rep;
 }
 
 Reply Ftp::read_reply() {
