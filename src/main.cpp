@@ -5,8 +5,21 @@
 
 int main() {
     try {
-       readCommand();
+        command cmd;
+        cmd = readCommand();
         
+        if (cmd.type == commandType::LOGIN){
+            login *lg = (login *)cmd.value;
+            std::cout << lg->ip << std::endl;
+            std::cout << lg->userName << std::endl;
+        }
+        else if (cmd.type == commandType::LIST_FILE){
+            listFile* ls = (listFile*)cmd.value;
+            std::cout << ls->path << std::endl;
+            std::cout << ls->outputFile << std::endl;
+        } 
+
+        delete cmd.value;
     } catch (const char *e) {
         std::cout << e << std::endl;
     }

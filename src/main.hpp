@@ -15,6 +15,7 @@ const int maxFile = 100;
 
 //Cac cau truc yeu cau
 enum class commandType{
+    ERROR,
     LOGIN,
     HELP, 
     LIST_FILE,
@@ -30,13 +31,14 @@ enum class commandType{
     RMKDIR,
     PWD,
     PASSIVE,
-    EXIT
+    ACTIVE,
+    EXIT,
 };
 
 //Menu cua cac lenh
 std::map<const std::string, const enum commandType> commandMenu = {
-    { "login", commandType::LOGIN },
-    { "help", commandType::HELP},
+    {"login", commandType::LOGIN },
+    {"help", commandType::HELP},
     {"ls", commandType::LIST_FILE},
     {"dir", commandType::LIST_FILE},
     {"put", commandType::PUT},
@@ -51,6 +53,7 @@ std::map<const std::string, const enum commandType> commandMenu = {
     {"rmkdir", commandType::RMKDIR},
     {"pwd", commandType::PWD},
     {"passive", commandType::PASSIVE},
+    {"active", commandType::ACTIVE},
     {"quit", commandType::EXIT},
     {"exit", commandType::EXIT}
 };
@@ -63,10 +66,23 @@ struct login{
     std::string password = "";
 };
 
+struct listFile{
+    std::string path = "";
+    std::string outputFile = "";
+};
+
+struct dirList{
+    std::string arrDir[maxFile];
+    int numDir = 0;
+};
+
 //Kieu du dieu command
 struct command{
     enum commandType type;
     void* value = NULL;
+    ~command(){
+        if (!value) delete value;
+    }
 };
 
 std::string myReadline(const char* prompt){
@@ -91,34 +107,45 @@ login* inputLogin(const std::string str){
     info->userName = myReadline("Name: ");
 
     tmp = getpass("Pass: ");
-    if (tmp) info->password = getpass("Pass: ");
+    if (tmp) info->password = tmp;
 
     return info;
 }
 
-std::vector<std::string> readDir(const std::string str){
-    std::vector<std::string> dirFiles;
-
-    int spacePos;
+dirList* readDir(const std::string str){
+    dirList* dirFiles = new dirList;
+    int splitPos;
     int currPos = 0;
     int i = 0;
     int prevPos = 0;
 
-    do{
-        spacePos = str.find(" ",currPos);
-
-        if(spacePos >= 0){
-            currPos = spacePos;
-            dirFiles.push_back(str.substr(prevPos, currPos - prevPos));
-            currPos++;
-            prevPos = currPos;
+    do{ 
+        if (str[currPos] == '\"'){
+            splitPos =  str.find('\"', currPos + 1);
+            prevPos++;
         }
+        else 
+            splitPos = str.find(" ",currPos);   
 
-    } while( spacePos >= 0);
+        currPos = splitPos;
+        dirFiles->arrDir[i++] = str.substr(prevPos, currPos - prevPos);
+        do{
+            currPos++;
+        } while (str[currPos] == ' ' && currPos < str.length());
+        prevPos = currPos;
+    } while( splitPos >= 0);
     
-    for (int i = 0; i < dirFiles.size(); i++)
-        std::cout << dirFiles[i] << std::endl;
+    dirFiles->numDir = i;
     return dirFiles;
+}
+
+listFile* inputListFile(std::string str){
+    dirList* dirFiles = readDir(str);
+    listFile* ls = new listFile;
+    ls->path = dirFiles->arrDir[0];
+    ls->outputFile = dirFiles->arrDir[1];
+    delete dirFiles;
+    return ls;
 }
 
 command readCommand(){
@@ -127,21 +154,25 @@ command readCommand(){
 //Lay yeu cau
     int pos = input_string.find(" ");
     std::string cmd_string = input_string.substr(0, pos);
-    input_string.erase(0, pos);
+    input_string.erase(0, pos + 1);
     
     command cmd;
-    cmd.type = commandMenu[cmd_string];
+    if (commandMenu.find(cmd_string) == commandMenu.end()){
+        cmd.type = commandType::ERROR;
+        return cmd;
+    } else cmd.type = commandMenu[cmd_string];
+
     switch (cmd.type){
         case commandType::LOGIN:
             cmd.value = inputLogin(input_string);
-            break;
-        case commandType::GET:
-            std::vector<std::string> tmp = readDir(input_string);
-            cmd.value = &tmp;
-            break;
+            return cmd;
+        
+        case commandType::LIST_FILE:
+            cmd.value = inputListFile(input_string);
+            return cmd;
     }
 
-    return cmd;
+    return command();
 }
 
 #endif
