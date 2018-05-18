@@ -42,6 +42,7 @@ public:
     bool set_passive();
     bool remove(const std::string &path);
     bool quit();
+    bool store(const std::string &path);
 };
 } // namespace ftp
 #endif

@@ -33,6 +33,7 @@ public:
     void close_read();
     void close_write();
     void close_both();
+    int fd();
 };
 
 class TcpListener {
