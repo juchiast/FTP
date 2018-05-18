@@ -102,3 +102,33 @@
         425, 426, 451
     450
     500, 501, 502, 421, 530
+
+## MKD
+- Format: MKD <SP> <path> <CRLF>
+- Return codes:
+    257
+    500, 501, 502, 421, 530, 550
+
+## RMD
+- Format: RMD <SP> <path> <CRLF>
+- Return codes:
+    250
+    500, 501, 502, 421, 530, 550
+
+## CWD
+- Format: CWD <SP> <path> <CRLF>
+- Return codes:
+    250
+    500, 501, 502, 421, 530, 550
+
+## CDUP
+- Format: CDUP <CRLF>
+- Return codes:
+    200
+    500, 501, 502, 421, 530, 550
+
+## PWD
+- Format: PWD <CRLF>
+- Return codes:
+    257
+    500, 501, 502, 421, 550

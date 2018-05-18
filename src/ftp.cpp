@@ -89,6 +89,9 @@ static __227Result __parse_227_reply(const ftp::Reply &rep) {
     }
 }
 
+/*
+ * Here goes some useful macros for implementation.
+ * */
 // Catch network error, print it then return.
 #define __catch_net                                                            \
     catch (char *e) {                                                          \
@@ -100,6 +103,14 @@ static __227Result __parse_227_reply(const ftp::Reply &rep) {
     catch (Reply r) {                                                          \
         _("Server return invalid reply: \n%s", r.reply.c_str());               \
         return true;                                                           \
+    }
+// Check the connection
+#define __check_connection                                                     \
+    {                                                                          \
+        if (this->cc == nullptr) {                                             \
+            _("Not connected");                                                \
+            return false;                                                      \
+        }                                                                      \
     }
 
 namespace ftp {
@@ -246,6 +257,7 @@ bool Ftp::login(const string &ip, uint16_t port, const string &name,
  * */
 bool Ftp::list(const string &path) {
     try {
+        __check_connection;
         if (!this->port_pasv()) {
             return false;
         }
@@ -362,6 +374,130 @@ bool Ftp::port_pasv() {
     default:
         throw rep;
     }
+}
+
+bool Ftp::mkdir(const string &path) {
+    try {
+        __check_connection;
+        this->cc->send("MKD " + path);
+        auto rep = this->read_reply();
+        switch (rep.code) {
+        case 257:
+            R(rep);
+            return true;
+        case 500:
+        case 501:
+        case 502:
+        case 421:
+        case 530:
+        case 550:
+            R(rep);
+            return false;
+        default:
+            throw rep;
+        }
+    }
+    __catch_net __catch_rep;
+}
+
+bool Ftp::rmdir(const string &path) {
+    try {
+        __check_connection;
+        this->cc->send("RMD " + path);
+        auto rep = this->read_reply();
+        switch (rep.code) {
+        case 250:
+            R(rep);
+            return true;
+        case 500:
+        case 501:
+        case 502:
+        case 421:
+        case 530:
+        case 550:
+            R(rep);
+            return false;
+        default:
+            throw rep;
+        }
+    }
+    __catch_net __catch_rep;
+}
+
+/*
+ * Change current directory on server.
+ *
+ * If path is "..", use CDUP command to make sure it works when
+ * remote system's syntax for parent directory is not "..".
+ *
+ * In RFC 959, CDUP returns 200, but some implementations use 250.
+ * */
+bool Ftp::chdir(const string &path) {
+    try {
+        __check_connection;
+        if (path == "..") {
+            this->cc->send("CDUP");
+            auto rep = this->read_reply();
+            switch (rep.code) {
+            case 200:
+            case 250:
+                R(rep);
+                return true;
+            case 500:
+            case 501:
+            case 502:
+            case 421:
+            case 530:
+            case 550:
+                R(rep);
+                return false;
+            default:
+                throw rep;
+            }
+        } else {
+            this->cc->send("CWD " + path);
+            auto rep = this->read_reply();
+            switch (rep.code) {
+            case 250:
+                R(rep);
+                return true;
+            case 500:
+            case 501:
+            case 502:
+            case 421:
+            case 530:
+            case 550:
+                R(rep);
+                return false;
+            default:
+                throw rep;
+            }
+        }
+    }
+    __catch_net __catch_rep;
+}
+
+bool Ftp::pwd() {
+    try {
+        __check_connection;
+        this->cc->send("PWD");
+        auto rep = this->read_reply();
+        switch (rep.code) {
+        case 257:
+            R(rep);
+            return true;
+        case 500:
+        case 501:
+        case 502:
+        case 421:
+        case 550:
+            R(rep);
+            return false;
+        default:
+            throw rep;
+        }
+    }
+    __catch_net __catch_rep;
 }
 
 }; // namespace ftp

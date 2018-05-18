@@ -32,6 +32,10 @@ public:
     bool login(const std::string &ip, uint16_t port, const std::string &name,
                const std::string &passwd);
     bool list(const std::string &path = "");
+    bool mkdir(const std::string &path);
+    bool rmdir(const std::string &path);
+    bool chdir(const std::string &path);
+    bool pwd();
 };
 } // namespace ftp
 #endif
