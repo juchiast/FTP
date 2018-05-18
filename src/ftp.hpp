@@ -36,6 +36,8 @@ public:
     bool rmdir(const std::string &path);
     bool chdir(const std::string &path);
     bool pwd();
+    bool local_chdir(const std::string &path);
+    bool local_pwd();
 };
 } // namespace ftp
 #endif

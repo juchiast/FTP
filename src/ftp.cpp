@@ -2,6 +2,7 @@
 #include <cassert>
 #include <iostream>
 #include <regex>
+#include <unistd.h>
 
 using std::string;
 
@@ -87,6 +88,15 @@ static __227Result __parse_227_reply(const ftp::Reply &rep) {
     } else {
         throw rep;
     }
+}
+
+bool __linux_chdir(const char *path) {
+    if (-1 == chdir(path)) {
+        auto err = errno;
+        _("Error: %s", strerror(err));
+        return false;
+    }
+    return true;
 }
 
 /*
@@ -498,6 +508,22 @@ bool Ftp::pwd() {
         }
     }
     __catch_net __catch_rep;
+}
+
+bool Ftp::local_chdir(const string &path) {
+    return __linux_chdir(path.c_str());
+}
+
+bool Ftp::local_pwd() {
+    char *str = get_current_dir_name();
+    if (str == nullptr) {
+        auto err = errno;
+        _("Error: %s", strerror(err));
+        return false;
+    }
+    _("%s", str);
+    free(str);
+    return true;
 }
 
 }; // namespace ftp
