@@ -40,6 +40,8 @@ public:
     bool local_pwd();
     bool set_active();
     bool set_passive();
+    bool remove(const std::string &path);
+    bool quit();
 };
 } // namespace ftp
 #endif

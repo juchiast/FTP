@@ -132,3 +132,10 @@
 - Return codes:
     257
     500, 501, 502, 421, 550
+
+## DELE
+- Format: DELE <SP> <path> <CRLF>
+- Return codes:
+    250
+    450, 550
+    500, 501, 502, 421, 530

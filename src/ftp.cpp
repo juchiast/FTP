@@ -511,9 +511,7 @@ bool Ftp::pwd() {
     __catch_net __catch_rep;
 }
 
-bool Ftp::local_chdir(const string &path) {
-    return linux_chdir(path.c_str());
-}
+bool Ftp::local_chdir(const string &path) { return linux_chdir(path.c_str()); }
 
 bool Ftp::local_pwd() {
     char *str = get_current_dir_name();
@@ -535,6 +533,50 @@ bool Ftp::set_active() {
 bool Ftp::set_passive() {
     this->active = false;
     return true;
+}
+
+bool Ftp::remove(const string &path) {
+    try {
+        __check_connection;
+        this->cc->send("DELE " + path);
+        auto rep = this->read_reply();
+        switch (rep.code) {
+        case 250:
+            R(rep);
+            return true;
+        case 450:
+        case 550:
+        case 500:
+        case 501:
+        case 502:
+        case 421:
+        case 530:
+            R(rep);
+            return false;
+        default:
+            throw rep;
+        }
+    }
+    __catch_net __catch_rep;
+}
+
+bool Ftp::quit() {
+    try {
+        __check_connection;
+        this->cc->send("QUIT");
+        auto rep = this->read_reply();
+        switch (rep.code) {
+        case 221:
+            R(rep);
+            return true;
+        case 500:
+            R(rep);
+            return false;
+        default:
+            throw rep;
+        }
+    }
+    __catch_net __catch_rep;
 }
 
 }; // namespace ftp
