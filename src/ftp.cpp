@@ -93,13 +93,13 @@ static __227Result __parse_227_reply(const ftp::Reply &rep) {
 #define __catch_net                                                            \
     catch (char *e) {                                                          \
         _("Error: %s", e);                                                     \
-        return;                                                                \
+        return false;                                                          \
     }
 // Catch invalid reply of server, print it then return.
 #define __catch_rep                                                            \
     catch (Reply r) {                                                          \
         _("Server return invalid reply: \n%s", r.reply.c_str());               \
-        return;                                                                \
+        return true;                                                           \
     }
 
 namespace ftp {
@@ -156,9 +156,8 @@ Ftp::~Ftp() {
  * Connect (or reconnect) to server,
  * then send username and password to login.
  * */
-void Ftp::login(const string &ip, uint16_t port, const string &name,
+bool Ftp::login(const string &ip, uint16_t port, const string &name,
                 const string &passwd) {
-
     // Connect to the server
     try {
         if (this->cc != NULL) {
@@ -177,7 +176,7 @@ void Ftp::login(const string &ip, uint16_t port, const string &name,
             R(rep);
         } else if (rep.code == 421) {
             R(rep);
-            return;
+            return false;
         } else {
             throw rep;
         }
@@ -192,7 +191,7 @@ void Ftp::login(const string &ip, uint16_t port, const string &name,
         switch (rep.code) {
         case 230:
             R(rep);
-            return;
+            return true;
         case 331:
             R(rep);
             break;
@@ -203,7 +202,7 @@ void Ftp::login(const string &ip, uint16_t port, const string &name,
         case 332:
             R(rep);
             _("Login failed")
-            return;
+            return false;
         default:
             throw rep;
         }
@@ -218,7 +217,7 @@ void Ftp::login(const string &ip, uint16_t port, const string &name,
         switch (rep.code) {
         case 230:
             R(rep);
-            return;
+            return true;
         case 202:
         case 530:
         case 500:
@@ -228,7 +227,7 @@ void Ftp::login(const string &ip, uint16_t port, const string &name,
         case 332:
             R(rep);
             _("Login failed");
-            return;
+            return false;
         default:
             throw rep;
         }
@@ -245,10 +244,10 @@ void Ftp::login(const string &ip, uint16_t port, const string &name,
  * Then, send LIST command, open data connection,
  * and handle replies.
  * */
-void Ftp::list(const string &path) {
+bool Ftp::list(const string &path) {
     try {
         if (!this->port_pasv()) {
-            return;
+            return false;
         }
         this->cc->send(path.empty() ? "LIST" : "LIST " + path);
         auto dc = this->setup_data_connection();
@@ -261,7 +260,7 @@ void Ftp::list(const string &path) {
         case 421:
         case 530:
             R(rep);
-            return;
+            return false;
         case 125:
         case 150: {
             R(rep);
@@ -271,16 +270,15 @@ void Ftp::list(const string &path) {
             case 226:
             case 250:
                 R(rep);
-                return;
+                return true;
             case 425:
             case 426:
             case 451:
                 R(rep);
-                return;
+                return false;
             default:
                 throw rep;
             }
-            return;
         }
         default:
             throw rep;

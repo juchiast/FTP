@@ -29,9 +29,9 @@ private:
 public:
     ~Ftp();
     Ftp();
-    void login(const std::string &ip, uint16_t port, const std::string &name,
+    bool login(const std::string &ip, uint16_t port, const std::string &name,
                const std::string &passwd);
-    void list(const std::string &path = "");
+    bool list(const std::string &path = "");
 };
 } // namespace ftp
 #endif
