@@ -43,6 +43,7 @@ public:
     bool remove(const std::string &path);
     bool quit();
     bool store(const std::string &path);
+    bool retrieve(const std::string &path);
 };
 } // namespace ftp
 #endif

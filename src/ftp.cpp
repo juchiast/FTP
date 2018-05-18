@@ -616,6 +616,7 @@ bool Ftp::quit() {
 
 bool Ftp::store(const string &path) {
     try {
+        __check_connection;
         auto file = open(path.c_str(), O_RDONLY);
         if (file == -1) {
             throw strerror(errno);
@@ -639,6 +640,7 @@ bool Ftp::store(const string &path) {
             return false;
         case 125:
         case 150: {
+            R(rep);
             pipe_and_close(file, dc.fd());
             auto rep = this->read_reply();
             switch (rep.code) {
@@ -652,6 +654,54 @@ bool Ftp::store(const string &path) {
             case 451:
             case 551:
             case 552:
+                R(rep);
+                return false;
+            default:
+                throw rep;
+            }
+        }
+        default:
+            throw rep;
+        }
+    }
+    __catch_net __catch_rep;
+}
+
+bool Ftp::retrieve(const string &path) {
+    try {
+        __check_connection;
+        auto file = fileno(fopen(path.c_str(), "w"));
+        if (file == -1) {
+            throw strerror(errno);
+        }
+        if (!this->port_pasv()) {
+            return false;
+        }
+        this->cc->send("RETR " + get_filename(path));
+        auto dc = this->setup_data_connection();
+        auto rep = read_reply();
+        switch (rep.code) {
+        case 450:
+        case 550:
+        case 500:
+        case 501:
+        case 421:
+        case 530:
+            R(rep);
+            return false;
+        case 125:
+        case 150: {
+            R(rep);
+            pipe_and_close(dc.fd(), file);
+            auto rep = this->read_reply();
+            switch (rep.code) {
+            case 226:
+            case 250:
+                R(rep);
+                return true;
+            case 425:
+            case 426:
+            case 451:
                 R(rep);
                 return false;
             default:

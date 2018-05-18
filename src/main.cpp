@@ -4,8 +4,8 @@
 int main() {
     ftp::Ftp f;
     f.login("10.1.1.100", 21, "user", "pass");
-    f.store("src/ftp.cpp");
     f.list();
+    f.retrieve("ftp.cpp");
     f.quit();
     return 0;
 }
