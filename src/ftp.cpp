@@ -65,7 +65,7 @@ struct __227Result {
  * Invalid data means it doesn't contain six numbers separated by ',',
  * or one of these number is not in the range [0, 255].
  * */
-static __227Result __parse_227_reply(const ftp::Reply &rep) {
+static __227Result parse_227_reply(const ftp::Reply &rep) {
     assert(rep.code == 227);
     static const std::regex re(R"((\d+),(\d+),(\d+),(\d+),(\d+),(\d+))");
     std::smatch sm;
@@ -90,7 +90,7 @@ static __227Result __parse_227_reply(const ftp::Reply &rep) {
     }
 }
 
-bool __linux_chdir(const char *path) {
+static bool linux_chdir(const char *path) {
     if (-1 == chdir(path)) {
         auto err = errno;
         _("Error: %s", strerror(err));
@@ -184,6 +184,7 @@ bool Ftp::login(const string &ip, uint16_t port, const string &name,
         if (this->cc != NULL) {
             // TODO should close the connection properly
             delete this->cc;
+            this->cc = NULL;
         }
         _("Connecting to server %s:%d", ip.c_str(), port);
         this->cc = new net::Messenger(net::TcpStream(ip.c_str(), port));
@@ -367,7 +368,7 @@ bool Ftp::port_pasv() {
     switch (rep.code) {
     case 227: {
         R(rep);
-        auto ret = __parse_227_reply(rep);
+        auto ret = parse_227_reply(rep);
         this->dc_param.ip = ret.ip;
         this->dc_param.port = ret.port;
         return true;
@@ -511,7 +512,7 @@ bool Ftp::pwd() {
 }
 
 bool Ftp::local_chdir(const string &path) {
-    return __linux_chdir(path.c_str());
+    return linux_chdir(path.c_str());
 }
 
 bool Ftp::local_pwd() {
@@ -523,6 +524,16 @@ bool Ftp::local_pwd() {
     }
     _("%s", str);
     free(str);
+    return true;
+}
+
+bool Ftp::set_active() {
+    this->active = true;
+    return true;
+}
+
+bool Ftp::set_passive() {
+    this->active = false;
     return true;
 }
 

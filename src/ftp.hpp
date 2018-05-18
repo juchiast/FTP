@@ -38,6 +38,8 @@ public:
     bool pwd();
     bool local_chdir(const std::string &path);
     bool local_pwd();
+    bool set_active();
+    bool set_passive();
 };
 } // namespace ftp
 #endif
