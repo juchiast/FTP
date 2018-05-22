@@ -47,11 +47,12 @@ std::map<const std::string, const enum commandType> commandMenu = {
     {"mget", commandType::MGET},
     {"cd", commandType::CD},
     {"lcd", commandType::LCD},
+    {"pwd", commandType::PWD},
     {"delete", commandType::DELETE},
     {"mdelete", commandType::MDELETE},
     {"mkdir", commandType::MKDIR},
     {"rmkdir", commandType::RMKDIR},
-    {"pwd", commandType::PWD},
+    //{"pwd", commandType::PWD},
     {"passive", commandType::PASSIVE},
     {"active", commandType::ACTIVE},
     {"quit", commandType::EXIT},
@@ -148,15 +149,25 @@ fileCommand* inputListFile(std::string str){
     return ls;
 }
 
+std::string* inputDir(std::string str){
+    dirList* dirFiles = readDir(str);
+    std::string* path = new std::string;
+    *path =  dirFiles->arrDir[0];
+    delete dirFiles;
+    return path;
+}
+
 command readCommand(){
     std::string input_string;
-    input_string = myReadline("ftp>");
+    input_string = myReadline("ftp> ");
 //Lay yeu cau
     int pos = input_string.find(" ");
+    if (pos <= 0) pos = input_string.length();
     std::string cmd_string = input_string.substr(0, pos);
     input_string.erase(0, pos + 1);
     
     command cmd;
+    //std::cout << cmd_string << std::endl;
     if (commandMenu.find(cmd_string) == commandMenu.end()){
         cmd.type = commandType::ERROR;
         return cmd;
@@ -172,14 +183,29 @@ command readCommand(){
         case commandType::LIST_FILE:
             cmd.value = inputListFile(input_string);
             return cmd;
-
-        //put [local-file] [remote]
-
         
-        //get [remote] [local]
-    }
+        //put [local-file]
+        //get [remote]
+        case commandType::PUT:
+        case commandType::GET:
+        case commandType::CD:
+        case commandType::LCD:
+        case commandType::DELETE:
+        case commandType::MKDIR:
+        case commandType::RMKDIR:
+            cmd.value = inputDir(input_string);
+            return cmd;
 
-    return command();
+        //mput mget
+        case commandType::MPUT:
+        case commandType::MGET:
+        case commandType::MDELETE:
+            cmd.value = readDir(input_string);    
+            return cmd;
+        
+        default:
+            return cmd;
+    }
 }
 
 #endif

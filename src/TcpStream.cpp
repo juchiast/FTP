@@ -141,7 +141,7 @@ TcpStream::~TcpStream() { close(this->sockfd); }
 
 /*
  * Just copy value of `_sockfd` into this new instance.
- * This constructor acts like move constructor. 
+ * This constructor acts like move constructor.
  * */
 TcpStream::TcpStream(int _sockfd) { this->sockfd = _sockfd; }
 
@@ -196,7 +196,7 @@ ReadAll TcpStream::read_all() {
  * */
 std::string ReadAll::str() const {
     std::string ret;
-    for (uint8_t c: this->data) {
+    for (uint8_t c : this->data) {
         if (c == 0) {
             break;
         }
@@ -204,4 +204,6 @@ std::string ReadAll::str() const {
     }
     return ret;
 }
+
+int TcpStream::fd() { return this->sockfd; }
 } // namespace net
