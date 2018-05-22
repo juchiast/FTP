@@ -1,10 +1,29 @@
 #include "ftp.hpp"
+#include "main.hpp"
+#include "net.hpp"
 #include <iostream>
+#include <thread>
 
 int main() {
     ftp::Ftp f;
-    f.login("127.0.0.1", 21, "user", "pass");
-    std::cout << std::endl;
-    f.list();
+    try {
+        command cmd;
+        cmd = readCommand();
+        
+        if (cmd.type == commandType::LOGIN){
+            login *lg = (login *)cmd.value;
+            std::cout << lg->ip << std::endl;
+            std::cout << lg->userName << std::endl;
+        }
+        else if (cmd.type == commandType::LIST_FILE){
+            fileCommand* ls = (fileCommand*)cmd.value;
+            std::cout << ls->remote << std::endl;
+            std::cout << ls->localFile << std::endl;
+        }
+
+        delete cmd.value;
+    } catch (const char *e) {
+        std::cout << e << std::endl;
+    }
     return 0;
 }
