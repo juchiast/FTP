@@ -42,8 +42,8 @@ public:
     bool set_passive();
     bool remove(const std::string &path);
     bool quit();
-    bool store(const std::string &path);
-    bool retrieve(const std::string &path);
+    bool store(const std::string &local_path, const std::string &remote_path);
+    bool retrieve(const std::string &local_path, const std::string &remote_path);
 };
 } // namespace ftp
 #endif

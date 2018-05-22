@@ -38,7 +38,7 @@ RET:
     close(in);
     close(out);
 }
-
+/*
 static string get_filename(const string &s) {
     string ret;
     for (auto i = s.rbegin(); i != s.rend() && *i != '/'; i++) {
@@ -49,6 +49,7 @@ static string get_filename(const string &s) {
     }
     return ret;
 }
+*/
 
 /*
  * FTP reply starts with a three-digit number indicating reply's code.
@@ -614,17 +615,19 @@ bool Ftp::quit() {
     __catch_net __catch_rep;
 }
 
-bool Ftp::store(const string &path) {
+bool Ftp::store(const string &local_path, const string &remote_path) {
     try {
         __check_connection;
-        auto file = open(path.c_str(), O_RDONLY);
+        auto file = open(local_path.c_str(), O_RDONLY);
         if (file == -1) {
             throw strerror(errno);
         }
         if (!this->port_pasv()) {
             return false;
         }
-        this->cc->send("STOR " + get_filename(path));
+
+        this->cc->send("STOR " + remote_path);
+        std::cout << remote_path << std::endl;
         auto dc = this->setup_data_connection();
         auto rep = this->read_reply();
         switch (rep.code) {
@@ -667,17 +670,17 @@ bool Ftp::store(const string &path) {
     __catch_net __catch_rep;
 }
 
-bool Ftp::retrieve(const string &path) {
+bool Ftp::retrieve(const string &local_path, const string &remote_path) {
     try {
         __check_connection;
-        auto file = fileno(fopen(path.c_str(), "w"));
+        auto file = fileno(fopen(local_path.c_str(), "w"));
         if (file == -1) {
             throw strerror(errno);
         }
         if (!this->port_pasv()) {
             return false;
         }
-        this->cc->send("RETR " + get_filename(path));
+        this->cc->send("RETR " + remote_path);
         auto dc = this->setup_data_connection();
         auto rep = read_reply();
         switch (rep.code) {

@@ -49,8 +49,8 @@ std::map<const std::string, const enum commandType> commandMenu = {
     {"lcd", commandType::LCD},
     {"delete", commandType::DELETE},
     {"mdelete", commandType::MDELETE},
-    {"mdir", commandType::MKDIR},
-    {"rmkdir", commandType::RMKDIR},
+    {"mkdir", commandType::MKDIR},
+    {"rmdir", commandType::RMKDIR},
     {"pwd", commandType::PWD},
     {"passive", commandType::PASSIVE},
     {"active", commandType::ACTIVE},
@@ -114,6 +114,7 @@ login* inputLogin(const std::string str){
 
 dirList* readDir(const std::string str){
     dirList* dirFiles = new dirList;
+    if (str == "") return dirFiles;
     int splitPos;
     int currPos = 0;
     int i = 0;
@@ -156,6 +157,35 @@ std::string* inputDir(std::string str){
     return path;
 }
 
+fileCommand* inputPut(std::string str){
+    dirList* dirFiles = readDir(str);
+    fileCommand* iput = new fileCommand;
+
+    std::cout << dirFiles->numDir << std::endl;
+    if (dirFiles->numDir == 0){
+        iput->localFile = myReadline("(local-file) ");
+        iput->remote = myReadline("(remote-file) ");
+        return iput;    
+    }
+
+    iput->remote = dirFiles->arrDir[1];
+    if (dirFiles->numDir > 1){
+        iput->localFile = dirFiles->arrDir[0];
+    } else iput->localFile = iput->remote;
+
+    delete dirFiles;
+    return iput;
+}
+
+fileCommand* inputGet(std::string str){
+    dirList* dirFiles = readDir(str);
+    fileCommand* iget = new fileCommand;
+    iget->remote = dirFiles->arrDir[0];
+    iget->localFile = dirFiles->arrDir[1];
+    delete dirFiles;
+    return iget;
+}
+
 command readCommand(){
     std::string input_string;
     input_string = myReadline("ftp> ");
@@ -183,10 +213,15 @@ command readCommand(){
             cmd.value = inputListFile(input_string);
             return cmd;
         
-        //put [local-file]
-        //get [remote]
+        //put [local-file] [remote]
         case commandType::PUT:
+            cmd.value = inputPut(input_string);
+            return cmd;
+        //get [remote] [local]
         case commandType::GET:
+            cmd.value = inputGet(input_string);
+            return cmd;
+
         case commandType::CD:
         case commandType::LCD:
         case commandType::DELETE:

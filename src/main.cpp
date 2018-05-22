@@ -13,74 +13,102 @@ int main() {
         command cmd;
         cmd = readCommand();
 
-        if (cmd.type == commandType::LOGIN) {
-            login *lg = (login *)cmd.value;
-            f.login(lg->ip, lg->port, lg->userName, lg->password);
-            delete lg;
-        } 
-        else if (cmd.type == commandType::LIST_FILE) {
-            fileCommand *ls = (fileCommand *)cmd.value;
-            f.list(ls->remote);
-            delete ls;
-        } 
-        else if (cmd.type == commandType::PUT) {
-            std::string *path = (std::string *)cmd.value;
-            f.store(*path);
-        } 
-        else if (cmd.type == commandType::GET) {
-            std::string *path = (std::string *)cmd.value;
-            cout << *path << endl;
-            f.retrieve(*path);
-        } 
-        else if (cmd.type == commandType::MPUT) {
-            dirList *ld = (dirList *)cmd.value;
-            for (int i = 0; i < ld->numDir; i++) {
-                f.store(ld->arrDir[i]);
+        switch (cmd.type){
+            case commandType::LOGIN:
+            {
+                login *lg = (login *)cmd.value;
+                f.login(lg->ip, lg->port, lg->userName, lg->password);
+                delete lg;
+                break;
             }
-        } 
-        else if (cmd.type == commandType::MGET) {
-            dirList *ld = (dirList *)cmd.value;
-            for (int i = 0; i < ld->numDir; i++) {
-                f.retrieve(ld->arrDir[i]);
+            case commandType::LIST_FILE:
+            {
+                fileCommand *ls = (fileCommand *)cmd.value;
+                f.list(ls->remote);
+                delete ls;
+                break;
             }
-        } 
-        else if (cmd.type == commandType::CD) {
-            std::string *path = (std::string *)cmd.value;
-            f.chdir(*path);
-        } 
-        else if (cmd.type == commandType::LCD) {
-            std::string *path = (std::string *)cmd.value;
-            f.local_chdir(*path);
-        } 
-        else if (cmd.type == commandType::DELETE) {
-            std::string *path = (std::string *)cmd.value;
-            f.remove(*path);
-        } 
-        else if (cmd.type == commandType::MDELETE) {
-            dirList *ld = (dirList *)cmd.value;
-            for (int i = 0; i < ld->numDir; i++) {
-                f.remove(ld->arrDir[i]);
+            case commandType::PUT:
+            {
+                fileCommand *path = (fileCommand*)cmd.value;
+                f.store(path->localFile, path->remote);
+                delete path;
+                break;
             }
-        } 
-        else if (cmd.type == commandType::MKDIR) {
-            std::string *path = (std::string *)cmd.value;
-            f.mkdir(*path);
-        } 
-        else if (cmd.type == commandType::RMKDIR) {
-            std::string *path = (std::string *)cmd.value;
-            f.rmdir(*path);
-        } 
-        else if (cmd.type == commandType::PWD) {
-            f.pwd();
-        } 
-        else if (cmd.type == commandType::EXIT) {
-            f.quit();
-        } 
-        else if (cmd.type == commandType::PASSIVE) {
-            f.set_passive();
-        } 
-        else if (cmd.type == commandType::ACTIVE) {
-            f.set_active();
+            case commandType::GET:
+            {
+                fileCommand *path = (fileCommand*)cmd.value;
+                f.retrieve(path->localFile, path->remote);
+                delete path;
+                break;
+            }
+            case commandType::MPUT:
+            {
+                
+            }
+            case commandType::MGET:
+            {
+                
+            }
+            case commandType::CD:
+            {
+                std::string *path = (std::string *)cmd.value;
+                f.chdir(*path);
+                delete path;
+                break;
+            }
+            case commandType::LCD:
+            {
+                std::string *path = (std::string *)cmd.value;
+                f.local_chdir(*path);
+                delete path;
+                break;
+            }
+            case commandType::DELETE:
+            {
+                std::string *path = (std::string *)cmd.value;
+                f.remove(*path);
+                delete path;
+                break;
+            }
+            case commandType::MDELETE:
+            {
+                dirList *ld = (dirList *)cmd.value;
+                for (int i = 0; i < ld->numDir; i++) {
+                    f.remove(ld->arrDir[i]);
+                }
+                delete ld;
+                break;
+            }
+            case commandType::MKDIR:
+            {
+                std::string *path = (std::string *)cmd.value;
+                f.mkdir(*path);
+                delete path;
+                break;
+            }
+            case commandType::RMKDIR:
+            {
+                std::string *path = (std::string *)cmd.value;
+                f.rmdir(*path);
+                delete path;
+                break;
+            }
+            case commandType::PWD:
+                f.pwd();
+                break;
+            case commandType::EXIT:
+                f.quit();
+                break;
+            case commandType::PASSIVE:
+                f.set_passive();
+                break;
+            case commandType::ACTIVE:
+                f.set_active();
+                break;
+            
+            default:
+                cout << "?Invalid command" << endl;
         }
     }
     return 0;
