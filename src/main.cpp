@@ -14,9 +14,9 @@ int main() {
             std::cout << lg->userName << std::endl;
         }
         else if (cmd.type == commandType::LIST_FILE){
-            listFile* ls = (listFile*)cmd.value;
-            std::cout << ls->path << std::endl;
-            std::cout << ls->outputFile << std::endl;
+            fileCommand* ls = (fileCommand*)cmd.value;
+            std::cout << ls->remote << std::endl;
+            std::cout << ls->localFile << std::endl;
         } 
 
         delete cmd.value;

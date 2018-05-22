@@ -66,9 +66,9 @@ struct login{
     std::string password = "";
 };
 
-struct listFile{
-    std::string path = "";
-    std::string outputFile = "";
+struct fileCommand{
+    std::string remote = "";
+    std::string localFile = "";
 };
 
 struct dirList{
@@ -139,11 +139,11 @@ dirList* readDir(const std::string str){
     return dirFiles;
 }
 
-listFile* inputListFile(std::string str){
+fileCommand* inputListFile(std::string str){
     dirList* dirFiles = readDir(str);
-    listFile* ls = new listFile;
-    ls->path = dirFiles->arrDir[0];
-    ls->outputFile = dirFiles->arrDir[1];
+    fileCommand* ls = new fileCommand;
+    ls->remote = dirFiles->arrDir[0];
+    ls->localFile = dirFiles->arrDir[1];
     delete dirFiles;
     return ls;
 }
@@ -163,13 +163,20 @@ command readCommand(){
     } else cmd.type = commandMenu[cmd_string];
 
     switch (cmd.type){
+        //login [ip] [username] [pass]
         case commandType::LOGIN:
             cmd.value = inputLogin(input_string);
             return cmd;
         
+        //ls [remote-directory] [local-file]
         case commandType::LIST_FILE:
             cmd.value = inputListFile(input_string);
             return cmd;
+
+        //put [local-file] [remote]
+
+        
+        //get [remote] [local]
     }
 
     return command();
