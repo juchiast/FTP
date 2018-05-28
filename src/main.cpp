@@ -8,7 +8,6 @@ using std::endl;
 
 int main() {
     ftp::Ftp f;
-    f.login("127.0.0.1", 21, "thiennu", "366117187");
     while (true) {
         command cmd;
         cmd = readCommand();
@@ -85,7 +84,7 @@ int main() {
             break;
         case commandType::EXIT:
             f.quit();
-            break;
+            return 0;
         case commandType::PASSIVE:
             f.set_passive();
             break;

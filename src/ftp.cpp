@@ -140,7 +140,7 @@ static bool linux_chdir(const char *path) {
  * */
 // Catch network error, print it then return.
 #define __catch_net                                                            \
-    catch (char *e) {                                                          \
+    catch (const char *e) {                                                          \
         _("Error: %s", e);                                                     \
         return false;                                                          \
     }
@@ -563,11 +563,13 @@ bool Ftp::local_pwd() {
 
 bool Ftp::set_active() {
     this->active = true;
+    _("Set mode to active");
     return true;
 }
 
 bool Ftp::set_passive() {
     this->active = false;
+    _("Set mode to passive");
     return true;
 }
 
