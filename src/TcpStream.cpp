@@ -205,5 +205,23 @@ std::string ReadAll::str() const {
     return ret;
 }
 
+Address TcpStream::get_listen_address() {
+    struct sockaddr_in addr;
+    socklen_t len = sizeof(addr);
+    if (getsockname(this->sockfd, (sockaddr *)&addr, &len) == -1) {
+        throw strerror(errno);
+    }
+    Address res;
+    uint32_t ip = ntohl(addr.sin_addr.s_addr);
+    for (size_t i = 0; i < 4; i++) {
+        res.data[i] = (ip >> (8 * (3 - i))) & 255;
+    }
+    uint16_t port = ntohs(addr.sin_port);
+    res.data[4] = (port >> 8) & 255;
+    res.data[5] = port & 255;
+    return res;
+}
+
+
 int TcpStream::fd() { return this->sockfd; }
 } // namespace net

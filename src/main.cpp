@@ -6,6 +6,46 @@
 using std::cout;
 using std::endl;
 
+void test_dc() {
+    ftp::Ftp f;
+    f.login("10.1.1.100", 21, "user", "pass");
+    f.set_active();
+
+    f.list();
+    f.list();
+
+    f.store("src/main.cpp", "main.cpp");
+    f.store("src/main.cpp", "main.cpp");
+
+    f.store("src/main.cpp", "src/main.cpp");
+    f.store("src/main.cpp", "src/main.cpp");
+
+    f.retrieve("/tmp/main.cpp", "main.cpp");
+    f.retrieve("/tmp/main.cpp", "main.cpp");
+
+    f.retrieve("/tmp/main.cpp", "src/main.cpp");
+    f.retrieve("/tmp/main.cpp", "src/main.cpp");
+
+    f.set_passive();
+
+    f.list();
+    f.list();
+
+    f.store("src/main.cpp", "main.cpp");
+    f.store("src/main.cpp", "main.cpp");
+
+    f.store("src/main.cpp", "src/main.cpp");
+    f.store("src/main.cpp", "src/main.cpp");
+
+    f.retrieve("/tmp/main.cpp", "main.cpp");
+    f.retrieve("/tmp/main.cpp", "main.cpp");
+
+    f.retrieve("/tmp/main.cpp", "src/main.cpp");
+    f.retrieve("/tmp/main.cpp", "src/main.cpp");
+
+    f.quit();
+}
+
 int main() {
     ftp::Ftp f;
     while (true) {

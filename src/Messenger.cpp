@@ -21,6 +21,7 @@ Messenger::Messenger(const TcpStream &ts) : stream(ts) {}
  * <CRLF> is automatically appended to the message.
  * */
 void Messenger::send(const std::string &msg) {
+    std::cout << "-> " + msg << std::endl;
     auto buf = msg + CRLF;
     stream.write(buf.c_str(), buf.length());
 }
@@ -53,6 +54,10 @@ std::string Messenger::receive() {
     buff.erase(0, x);
 
     return ans;
+}
+
+Address Messenger::get_listen_address() {
+    return this->stream.get_listen_address();
 }
 
 Messenger::~Messenger() {}

@@ -1,10 +1,12 @@
 #include "ftp.hpp"
 #include <cassert>
 #include <fcntl.h>
+#include <functional>
 #include <iostream>
 #include <regex>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <thread>
 #include <unistd.h>
 
 using std::string;
@@ -140,7 +142,7 @@ static bool linux_chdir(const char *path) {
  * */
 // Catch network error, print it then return.
 #define __catch_net                                                            \
-    catch (const char *e) {                                                          \
+    catch (const char *e) {                                                    \
         _("Error: %s", e);                                                     \
         return false;                                                          \
     }
@@ -204,8 +206,11 @@ namespace ftp {
  * */
 Ftp::Ftp() {}
 Ftp::~Ftp() {
-    if (this->cc != NULL) {
+    if (this->cc != nullptr) {
         delete this->cc;
+    }
+    if (this->active_listen != nullptr) {
+        delete this->active_listen;
     }
 }
 
@@ -217,10 +222,10 @@ bool Ftp::login(const string &ip, uint16_t port, const string &name,
                 const string &passwd) {
     // Connect to the server
     try {
-        if (this->cc != NULL) {
+        if (this->cc != nullptr) {
             // TODO should close the connection properly
             delete this->cc;
-            this->cc = NULL;
+            this->cc = nullptr;
         }
         _("Connecting to server %s:%d", ip.c_str(), port);
         this->cc = new net::Messenger(net::TcpStream(ip.c_str(), port));
@@ -309,7 +314,15 @@ bool Ftp::list(const string &path) {
             return false;
         }
         this->cc->send(path.empty() ? "LIST" : "LIST " + path);
-        auto dc = this->setup_data_connection();
+        auto dc = net::TcpStream(-1);
+        const char *error = nullptr;
+        auto th = std::thread([&]() {
+            try {
+                dc = this->setup_data_connection();
+            } catch (const char *e) {
+                error = e;
+            }
+        });
         auto rep = this->read_reply();
         switch (rep.code) {
         case 450:
@@ -319,10 +332,14 @@ bool Ftp::list(const string &path) {
         case 421:
         case 530:
             R(rep);
+            th.detach();
             return false;
         case 125:
         case 150: {
             R(rep);
+            th.join();
+            if (error != nullptr)
+                throw error;
             std::cout << dc.read_all().str();
             rep = this->read_reply();
             switch (rep.code) {
@@ -340,6 +357,7 @@ bool Ftp::list(const string &path) {
             }
         }
         default:
+            th.detach();
             throw rep;
         }
     }
@@ -351,7 +369,15 @@ bool Ftp::list(const string &path) {
  * */
 net::TcpStream Ftp::setup_data_connection() {
     if (this->active) {
-        throw "Not implemented";
+        if (this->active_listen == nullptr) {
+            throw "Need to setup PORT first";
+        } else {
+            auto tmp = this->active_listen;
+            this->active_listen = nullptr;
+            auto res = tmp->next();
+            delete tmp;
+            return res;
+        }
     }
 
     return net::TcpStream(this->dc_param.ip.c_str(), this->dc_param.port);
@@ -397,29 +423,57 @@ Reply Ftp::read_reply() {
  * */
 bool Ftp::port_pasv() {
     if (this->active) {
-        throw "Not implemented";
-    }
-    this->cc->send("PASV");
-    auto rep = this->read_reply();
-    switch (rep.code) {
-    case 227: {
-        R(rep);
-        auto ret = parse_227_reply(rep);
-        this->dc_param.ip = ret.ip;
-        this->dc_param.port = ret.port;
-        return true;
-    }
-    case 500:
-    case 501:
-    case 502:
-    case 421:
-    case 530:
-        R(rep);
-        this->dc_param.ip = "";
-        this->dc_param.port = 0;
-        return false;
-    default:
-        throw rep;
+        if (this->active_listen != nullptr)
+            return true;
+        auto info = this->cc->get_listen_address();
+        string cmd = "PORT " + std::to_string(info.data[0]);
+        for (size_t i = 1; i < 4; i++) {
+            cmd += "," + std::to_string(info.data[i]);
+        }
+
+        this->active_listen = new net::TcpListener(0);
+        info = this->active_listen->get_listen_address();
+        for (size_t i = 4; i < 6; i++) {
+            cmd += "," + std::to_string(info.data[i]);
+        }
+        this->cc->send(cmd);
+        auto rep = this->read_reply();
+        switch (rep.code) {
+        case 200:
+            R(rep);
+            return true;
+        case 500:
+        case 501:
+        case 421:
+        case 530:
+            R(rep);
+            return false;
+        default:
+            throw rep;
+        }
+    } else {
+        this->cc->send("PASV");
+        auto rep = this->read_reply();
+        switch (rep.code) {
+        case 227: {
+            R(rep);
+            auto ret = parse_227_reply(rep);
+            this->dc_param.ip = ret.ip;
+            this->dc_param.port = ret.port;
+            return true;
+        }
+        case 500:
+        case 501:
+        case 502:
+        case 421:
+        case 530:
+            R(rep);
+            this->dc_param.ip = "";
+            this->dc_param.port = 0;
+            return false;
+        default:
+            throw rep;
+        }
     }
 }
 
@@ -629,8 +683,15 @@ bool Ftp::store(const string &local_path, const string &remote_path) {
         }
 
         this->cc->send("STOR " + remote_path);
-        std::cout << remote_path << std::endl;
-        auto dc = this->setup_data_connection();
+        auto dc = net::TcpStream(-1);
+        const char *error = nullptr;
+        auto th = std::thread([&]() {
+            try {
+                dc = this->setup_data_connection();
+            } catch (const char *e) {
+                error = e;
+            }
+        });
         auto rep = this->read_reply();
         switch (rep.code) {
         case 532:
@@ -642,10 +703,14 @@ bool Ftp::store(const string &local_path, const string &remote_path) {
         case 421:
         case 530:
             R(rep);
+            th.detach();
             return false;
         case 125:
         case 150: {
             R(rep);
+            th.join();
+            if (error != nullptr)
+                throw error;
             pipe_and_close(file, dc.fd());
             auto rep = this->read_reply();
             switch (rep.code) {
@@ -666,6 +731,7 @@ bool Ftp::store(const string &local_path, const string &remote_path) {
             }
         }
         default:
+            th.detach();
             throw rep;
         }
     }
@@ -683,7 +749,15 @@ bool Ftp::retrieve(const string &local_path, const string &remote_path) {
             return false;
         }
         this->cc->send("RETR " + remote_path);
-        auto dc = this->setup_data_connection();
+        auto dc = net::TcpStream(-1);
+        const char *error = nullptr;
+        auto th = std::thread([&]() {
+            try {
+                dc = this->setup_data_connection();
+            } catch (const char *e) {
+                error = e;
+            }
+        });
         auto rep = read_reply();
         switch (rep.code) {
         case 450:
@@ -693,10 +767,14 @@ bool Ftp::retrieve(const string &local_path, const string &remote_path) {
         case 421:
         case 530:
             R(rep);
+            th.detach();
             return false;
         case 125:
         case 150: {
             R(rep);
+            th.join();
+            if (error != nullptr)
+                throw error;
             pipe_and_close(dc.fd(), file);
             auto rep = this->read_reply();
             switch (rep.code) {
@@ -714,6 +792,7 @@ bool Ftp::retrieve(const string &local_path, const string &remote_path) {
             }
         }
         default:
+            th.detach();
             throw rep;
         }
     }

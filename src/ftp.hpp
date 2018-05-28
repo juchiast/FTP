@@ -13,13 +13,14 @@ struct Reply {
 class Ftp {
 
 private:
-    net::Messenger *cc = NULL;
+    net::Messenger *cc = nullptr;
     bool active = false;
 
     struct {
         std::string ip;
         uint16_t port = 0;
     } dc_param;
+    net::TcpListener *active_listen = nullptr;
 
     Reply read_reply();
 

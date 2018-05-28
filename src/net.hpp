@@ -14,6 +14,9 @@ struct ReadAll {
 
     std::string str() const;
 };
+struct Address {
+    uint8_t data[6];
+};
 
 class TcpStream {
 private:
@@ -34,6 +37,7 @@ public:
     void close_write();
     void close_both();
     int fd();
+    Address get_listen_address();
 };
 
 class TcpListener {
@@ -49,6 +53,7 @@ public:
     TcpListener(const TcpListener &);
     TcpListener &operator=(const TcpListener &);
     void close();
+    Address get_listen_address();
 };
 
 class Messenger {
@@ -63,6 +68,7 @@ public:
     ~Messenger();
     void send(const std::string &);
     std::string receive();
+    Address get_listen_address();
 };
 
 } // namespace net
