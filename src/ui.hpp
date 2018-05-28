@@ -1,6 +1,9 @@
 #ifndef _UI_H_
 #define _UI_H_
+#include "ftp.hpp"
 #include <string>
+
+namespace ui{
 
 const int maxFile = 100;
 
@@ -49,5 +52,6 @@ struct command {
     enum commandType type;
     void *value = NULL;
 };
-command readCommand();
+int run(void *ftp);
+}
 #endif

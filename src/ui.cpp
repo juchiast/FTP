@@ -6,6 +6,10 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <vector>
+using std::cout;
+using std::endl;
+
+using namespace ui;
 
 // Menu cua cac lenh
 const static std::map<std::string, enum commandType> commandMenu = {
@@ -123,9 +127,8 @@ static fileCommand *inputGet(std::string str) {
     return iget;
 }
 
-command readCommand() {
-    std::string input_string;
-    input_string = myReadline("ftp> ");
+static command readCommand() {
+    std::string input_string = myReadline("ftp> ");
     // Lay yeu cau
     int pos = input_string.find(" ");
     if (pos <= 0)
@@ -180,3 +183,98 @@ command readCommand() {
         return cmd;
     }
 }
+
+namespace ui {
+int run(void *_ftp) {
+    auto f = (ftp::Ftp *)_ftp;
+    command cmd;
+    cmd = readCommand();
+
+    switch (cmd.type) {
+    case commandType::LOGIN: {
+        login *lg = (login *)cmd.value;
+        f->login(lg->ip, lg->port, lg->userName, lg->password);
+        delete lg;
+        break;
+    }
+    case commandType::LIST_FILE: {
+        fileCommand *ls = (fileCommand *)cmd.value;
+        f->list(ls->remote);
+        delete ls;
+        break;
+    }
+    case commandType::PUT: {
+        fileCommand *path = (fileCommand *)cmd.value;
+        f->store(path->localFile, path->remote);
+        delete path;
+        break;
+    }
+    case commandType::GET: {
+        fileCommand *path = (fileCommand *)cmd.value;
+        f->retrieve(path->localFile, path->remote);
+        delete path;
+        break;
+    }
+    case commandType::MPUT: {
+    }
+    case commandType::MGET: {
+    }
+    case commandType::CD: {
+        std::string *path = (std::string *)cmd.value;
+        f->chdir(*path);
+        delete path;
+        break;
+    }
+    case commandType::LCD: {
+        std::string *path = (std::string *)cmd.value;
+        f->local_chdir(*path);
+        delete path;
+        break;
+    }
+    case commandType::DELETE: {
+        std::string *path = (std::string *)cmd.value;
+        f->remove(*path);
+        delete path;
+        break;
+    }
+    case commandType::MDELETE: {
+        dirList *ld = (dirList *)cmd.value;
+        for (int i = 0; i < ld->numDir; i++) {
+            f->remove(ld->arrDir[i]);
+        }
+        delete ld;
+        break;
+    }
+    case commandType::MKDIR: {
+        std::string *path = (std::string *)cmd.value;
+        f->mkdir(*path);
+        delete path;
+        break;
+    }
+    case commandType::RMKDIR: {
+        std::string *path = (std::string *)cmd.value;
+        f->rmdir(*path);
+        delete path;
+        break;
+    }
+    case commandType::PWD:
+        f->pwd();
+        break;
+    case commandType::EXIT:
+        f->quit();
+        return 2;
+    case commandType::PASSIVE:
+        f->set_passive();
+        break;
+    case commandType::ACTIVE:
+        f->set_active();
+        break;
+
+    default:
+        cout << "?Invalid command" << endl;
+    }
+
+    return 0;
+}
+
+} // namespace ui
