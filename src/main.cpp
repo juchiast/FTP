@@ -1,100 +1,77 @@
-#include "ui.hpp"
 #include "ftp.hpp"
-#include "net.hpp"
+#include "ui.hpp"
+#include <chrono>
 #include <iostream>
+#include <sched.h>
+#include <signal.h>
+#include <string.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+
 #include <thread>
-using std::cout;
-using std::endl;
+
+// 8mb stack
+#define STACK_SIZE (1024 * 1024 * 8)
+#define TRY(_call_)                                                            \
+    {                                                                          \
+        if ((_call_) == -1) {                                                  \
+            std::cout << strerror(errno) << std::endl;                         \
+            goto failed;                                                       \
+        }                                                                      \
+    }
+
+int wait_child(pid_t pid) {
+    int status;
+    if (waitpid(pid, &status, 0) == -1)
+        return -1;
+    return (WIFEXITED(status) && WEXITSTATUS(status) == 2);
+}
 
 int main() {
+    char *stack = (char *)malloc(STACK_SIZE);
+    if (stack == nullptr)
+        return 1;
+    char *stack_top = stack + STACK_SIZE;
+
     ftp::Ftp f;
-    while (true) {
-        command cmd;
-        cmd = readCommand();
 
-        switch (cmd.type) {
-        case commandType::LOGIN: {
-            login *lg = (login *)cmd.value;
-            f.login(lg->ip, lg->port, lg->userName, lg->password);
-            delete lg;
-            break;
-        }
-        case commandType::LIST_FILE: {
-            fileCommand *ls = (fileCommand *)cmd.value;
-            f.list(ls->remote);
-            delete ls;
-            break;
-        }
-        case commandType::PUT: {
-            fileCommand *path = (fileCommand *)cmd.value;
-            f.store(path->localFile, path->remote);
-            delete path;
-            break;
-        }
-        case commandType::GET: {
-            fileCommand *path = (fileCommand *)cmd.value;
-            f.retrieve(path->localFile, path->remote);
-            delete path;
-            break;
-        }
-        case commandType::MPUT: {
-        }
-        case commandType::MGET: {
-        }
-        case commandType::CD: {
-            std::string *path = (std::string *)cmd.value;
-            f.chdir(*path);
-            delete path;
-            break;
-        }
-        case commandType::LCD: {
-            std::string *path = (std::string *)cmd.value;
-            f.local_chdir(*path);
-            delete path;
-            break;
-        }
-        case commandType::DELETE: {
-            std::string *path = (std::string *)cmd.value;
-            f.remove(*path);
-            delete path;
-            break;
-        }
-        case commandType::MDELETE: {
-            dirList *ld = (dirList *)cmd.value;
-            for (int i = 0; i < ld->numDir; i++) {
-                f.remove(ld->arrDir[i]);
+    int stop = 0;
+    while (stop != 1) {
+        sigset_t set;
+        TRY(sigemptyset(&set));
+        TRY(sigprocmask(SIG_SETMASK, &set, nullptr));
+
+        pid_t pid;
+        TRY(pid = clone(ui::run, stack_top, SIGCHLD | CLONE_VM | CLONE_FILES,
+                        &f));
+
+        TRY(sigaddset(&set, SIGCHLD));
+        TRY(sigaddset(&set, SIGINT));
+        TRY(sigprocmask(SIG_BLOCK, &set, nullptr));
+
+        siginfo_t info;
+        TRY(sigwaitinfo(&set, &info));
+
+        if (info.si_signo == SIGINT) {
+            kill(pid, SIGINT);
+            TRY(sigemptyset(&set));
+            TRY(sigaddset(&set, SIGCHLD));
+            TRY(sigwaitinfo(&set, &info));
+            if (info.si_signo == SIGCHLD) {
+                TRY(stop = wait_child(pid));
+                std::cout << std::endl;
+            } else {
+                goto failed;
             }
-            delete ld;
-            break;
-        }
-        case commandType::MKDIR: {
-            std::string *path = (std::string *)cmd.value;
-            f.mkdir(*path);
-            delete path;
-            break;
-        }
-        case commandType::RMKDIR: {
-            std::string *path = (std::string *)cmd.value;
-            f.rmdir(*path);
-            delete path;
-            break;
-        }
-        case commandType::PWD:
-            f.pwd();
-            break;
-        case commandType::EXIT:
-            f.quit();
-            return 0;
-        case commandType::PASSIVE:
-            f.set_passive();
-            break;
-        case commandType::ACTIVE:
-            f.set_active();
-            break;
-
-        default:
-            cout << "?Invalid command" << endl;
+        } else if (info.si_signo == SIGCHLD) {
+            TRY(stop = wait_child(pid));
+        } else {
+            goto failed;
         }
     }
+    free(stack);
     return 0;
+failed:
+    free(stack);
+    return EXIT_FAILURE;
 }
