@@ -16,3 +16,4 @@ file(GLOB SRC "src/*.cpp")
 add_executable(ftp ${SRC})
 
 target_link_libraries(ftp readline)
+target_link_libraries(ftp pthread)
