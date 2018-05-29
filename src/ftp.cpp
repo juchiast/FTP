@@ -741,10 +741,6 @@ bool Ftp::store(const string &local_path, const string &remote_path) {
 bool Ftp::retrieve(const string &local_path, const string &remote_path) {
     try {
         __check_connection;
-        auto file = fileno(fopen(local_path.c_str(), "w"));
-        if (file == -1) {
-            throw strerror(errno);
-        }
         if (!this->port_pasv()) {
             return false;
         }
@@ -775,6 +771,10 @@ bool Ftp::retrieve(const string &local_path, const string &remote_path) {
             th.join();
             if (error != nullptr)
                 throw error;
+            auto file = fileno(fopen(local_path.c_str(), "w"));
+            if (file == -1) {
+                throw strerror(errno);
+            }
             pipe_and_close(dc.fd(), file);
             auto rep = this->read_reply();
             switch (rep.code) {

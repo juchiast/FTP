@@ -228,8 +228,22 @@ int run(void *_ftp) {
         break;
     }
     case commandType::MPUT: {
+        dirList* dl = (dirList*)cmd.value;
+        for (int i = 0; i < dl->numDir; i++){
+            auto confirm = myReadline((dl->arrDir[i] + "? ").c_str());
+            if (confirm == "y")
+                f->store(dl->arrDir[i], dl->arrDir[i]);
+        }
+        break;
     }
     case commandType::MGET: {
+        dirList* dl = (dirList*)cmd.value;
+        for (int i = 0; i < dl->numDir; i++) {
+            auto confirm = myReadline((dl->arrDir[i] + "? ").c_str());
+            if (confirm == "y")
+                f->retrieve(dl->arrDir[i], dl->arrDir[i]);
+        }
+        break;
     }
     case commandType::CD: {
         std::string *path = (std::string *)cmd.value;
