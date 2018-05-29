@@ -82,7 +82,7 @@ int main() {
         TRY(sigprocmask(SIG_SETMASK, &set, nullptr));
 
         pid_t pid;
-        TRY(pid = clone(ui::run, stack_top, SIGCHLD | CLONE_VM | CLONE_FILES,
+        TRY(pid = clone(ui::run, stack_top, SIGCHLD | CLONE_VM | CLONE_FILES | CLONE_FS,
                         &f));
 
         TRY(sigaddset(&set, SIGCHLD));
