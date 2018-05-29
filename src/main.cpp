@@ -8,8 +8,6 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
-#include <thread>
-
 // 8mb stack
 #define STACK_SIZE (1024 * 1024 * 8)
 #define TRY(_call_)                                                            \
@@ -82,8 +80,8 @@ int main() {
         TRY(sigprocmask(SIG_SETMASK, &set, nullptr));
 
         pid_t pid;
-        TRY(pid = clone(ui::run, stack_top, SIGCHLD | CLONE_VM | CLONE_FILES | CLONE_FS,
-                        &f));
+        TRY(pid = clone(ui::run, stack_top,
+                        SIGCHLD | CLONE_VM | CLONE_FILES | CLONE_FS, &f));
 
         TRY(sigaddset(&set, SIGCHLD));
         TRY(sigaddset(&set, SIGINT));

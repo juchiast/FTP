@@ -2,19 +2,48 @@
 #include <arpa/inet.h>
 #include <errno.h>
 #include <iostream>
+#include <netdb.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
+
 using namespace net;
+
+uint32_t dns(std::string host) {
+    struct addrinfo hints, *res;
+    int errcode;
+    char addrstr[100];
+    void *ptr;
+
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_flags |= AI_CANONNAME;
+
+    errcode = getaddrinfo(host.c_str(), NULL, &hints, &res);
+    if (errcode != 0) {
+        if (errcode != EAI_SYSTEM)
+            throw gai_strerror(errcode);
+        else
+            throw strerror(errno);
+    }
+    if (res == nullptr) {
+        throw "Cannot resolve domain name";
+    } else {
+        auto tmp = ((struct sockaddr_in *)res->ai_addr)->sin_addr.s_addr;
+        freeaddrinfo(res);
+        return tmp;
+    }
+}
 
 /*
  * Return a `struct sockaddr_in` to use in later syscall by combining
  * IP address and port.
  *
- * `ip` is a string present an IPv4 address
+ * `ip` is a string present an IPv4 address or domain name
  * `port` is the port number to be use
  *
  * This function throw if there is any error.
@@ -23,10 +52,11 @@ static struct sockaddr_in __get_address(const char *ip, uint16_t port) {
     uint32_t x = 0;
     int err_code = inet_pton(AF_INET, ip, &x);
     if (err_code == 0) {
-        throw "Invalid address string";
+        x = dns(ip);
     } else if (err_code == -1) {
         throw strerror(errno);
     }
+
     struct sockaddr_in addr;
     addr.sin_addr.s_addr = x;
     addr.sin_port = htons(port);
@@ -221,7 +251,6 @@ Address TcpStream::get_listen_address() {
     res.data[5] = port & 255;
     return res;
 }
-
 
 int TcpStream::fd() { return this->sockfd; }
 } // namespace net
