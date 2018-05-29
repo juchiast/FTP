@@ -66,7 +66,7 @@ private:
 public:
     Messenger(const TcpStream &);
     ~Messenger();
-    void send(const std::string &);
+    void send(const std::string &, bool verbose = true);
     std::string receive();
     Address get_listen_address();
 };

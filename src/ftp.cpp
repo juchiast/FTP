@@ -275,7 +275,7 @@ bool Ftp::login(const string &ip, uint16_t port, const string &name,
     // Send password
     try {
         _("Sending password");
-        this->cc->send("PASS " + passwd);
+        this->cc->send("PASS " + passwd, false);
         auto rep = this->read_reply();
         switch (rep.code) {
         case 230:
