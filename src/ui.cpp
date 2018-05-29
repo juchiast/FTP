@@ -52,10 +52,12 @@ static login *inputLogin(const std::string str) {
     return info;
 }
 
-static dirList *readDir(const std::string str) {
+static dirList *readDir(std::string str) {
     dirList *dirFiles = new dirList;
     if (str == "")
         return dirFiles;
+    while (str[0] == ' ') str.erase(0, 1);
+    while (str[str.length() - 1] == ' ') str.erase(str.length() - 1, 1);
     int splitPos;
     int currPos = 0;
     int i = 0;
@@ -77,6 +79,7 @@ static dirList *readDir(const std::string str) {
     } while (splitPos >= 0);
 
     dirFiles->numDir = i;
+    //std::cout << i << endl;
     return dirFiles;
 }
 

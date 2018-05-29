@@ -365,25 +365,6 @@ bool Ftp::list(const string &path) {
 }
 
 /*
- * Open data connection, according to current mode (active or passive).
- * */
-net::TcpStream Ftp::setup_data_connection() {
-    if (this->active) {
-        if (this->active_listen == nullptr) {
-            throw "Need to setup PORT first";
-        } else {
-            auto tmp = this->active_listen;
-            this->active_listen = nullptr;
-            auto res = tmp->next();
-            delete tmp;
-            return res;
-        }
-    }
-
-    return net::TcpStream(this->dc_param.ip.c_str(), this->dc_param.port);
-}
-
-/*
  * Read a reply.
  * The returned struct contains reply's code in number,
  * and the full text recieved.
@@ -670,6 +651,26 @@ bool Ftp::quit() {
     }
     __catch_net __catch_rep;
 }
+
+/*
+ * Open data connection, according to current mode (active or passive).
+ * */
+net::TcpStream Ftp::setup_data_connection() {
+    if (this->active) {
+        if (this->active_listen == nullptr) {
+            throw "Need to setup PORT first";
+        } else {
+            auto tmp = this->active_listen;
+            this->active_listen = nullptr;
+            auto res = tmp->next();
+            delete tmp;
+            return res;
+        }
+    }
+
+    return net::TcpStream(this->dc_param.ip.c_str(), this->dc_param.port);
+}
+
 
 bool Ftp::store(const string &local_path, const string &remote_path) {
     try {
