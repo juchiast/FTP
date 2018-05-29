@@ -101,18 +101,18 @@ static fileCommand *inputPut(std::string str) {
     dirList *dirFiles = readDir(str);
     fileCommand *iput = new fileCommand;
 
-    std::cout << dirFiles->numDir << std::endl;
+    //std::cout << dirFiles->numDir << std::endl;
     if (dirFiles->numDir == 0) {
         iput->localFile = myReadline("(local-file) ");
         iput->remote = myReadline("(remote-file) ");
         return iput;
     }
 
-    iput->remote = dirFiles->arrDir[1];
+    iput->localFile = dirFiles->arrDir[0];
     if (dirFiles->numDir > 1) {
-        iput->localFile = dirFiles->arrDir[0];
+        iput->remote = dirFiles->arrDir[1];
     } else
-        iput->localFile = iput->remote;
+        iput->remote = iput->localFile;
 
     delete dirFiles;
     return iput;
@@ -121,8 +121,20 @@ static fileCommand *inputPut(std::string str) {
 static fileCommand *inputGet(std::string str) {
     dirList *dirFiles = readDir(str);
     fileCommand *iget = new fileCommand;
+
+    //std::cout << dirFiles->numDir << std::endl;
+    if (dirFiles->numDir == 0) {
+        iget->localFile = myReadline("(remote-file) ");
+        iget->remote = myReadline("(local-file) ");
+        return iget;
+    }
+
     iget->remote = dirFiles->arrDir[0];
-    iget->localFile = dirFiles->arrDir[1];
+    if (dirFiles->numDir > 1) {
+        iget->localFile = dirFiles->arrDir[1];
+    } else
+        iget->localFile = iget->remote;
+
     delete dirFiles;
     return iget;
 }
