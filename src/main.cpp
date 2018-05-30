@@ -29,7 +29,13 @@ int wait_child(pid_t pid) {
 
 void test_dc() {
     ftp::Ftp f;
-    f.login("10.1.1.100", 21, "user", "pass");
+    f.login("192.168.101.1", 21, "user1", "123");
+    std::cin.get();
+    f.retrieve("/tmp/deku.jpg", "deku.jpg");
+    std::cin.get();
+    f.quit();
+    return;
+
     f.set_active();
 
     f.list();
@@ -72,6 +78,10 @@ int main() {
     if (stack == nullptr)
         return 1;
     char *stack_top = stack + STACK_SIZE;
+
+    test_dc();
+    free(stack);
+    return 0;
 
     ftp::Ftp f;
 
