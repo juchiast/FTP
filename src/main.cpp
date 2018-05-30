@@ -28,6 +28,7 @@ int wait_child(pid_t pid) {
 void test_dc() {
     ftp::Ftp f;
     f.login("10.1.1.100", 21, "user", "pass");
+
     f.set_active();
 
     f.list();

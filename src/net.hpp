@@ -25,7 +25,7 @@ private:
 
 public:
     ~TcpStream();
-    TcpStream(const char *remote_ip, uint16_t remote_port);
+    TcpStream(const char *remote_ip, uint16_t remote_port, bool nonblock = false);
     TcpStream(int sockfd);
     TcpStream(const TcpStream &);
     TcpStream &operator=(const TcpStream &);
@@ -38,6 +38,7 @@ public:
     void close_both();
     int fd();
     Address get_listen_address();
+    void set_block();
 };
 
 class TcpListener {

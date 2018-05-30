@@ -1,6 +1,7 @@
 #include "net.hpp"
 #include <arpa/inet.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <iostream>
 #include <netdb.h>
 #include <netinet/in.h>
@@ -15,8 +16,6 @@ using namespace net;
 uint32_t dns(std::string host) {
     struct addrinfo hints, *res;
     int errcode;
-    char addrstr[100];
-    void *ptr;
 
     memset(&hints, 0, sizeof(hints));
     hints.ai_family = AF_INET;
@@ -73,25 +72,53 @@ static struct sockaddr_in __get_address(const char *ip, uint16_t port) {
  *
  * This function throw if there is any error.
  * */
-static int __connect(struct sockaddr_in addr) {
+static int __connect(struct sockaddr_in addr, bool nonblock) {
     auto sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd == -1) {
         throw strerror(errno);
     }
+
+    if (nonblock) {
+        int opts;
+        if ((opts = fcntl(sockfd, F_GETFL)) == -1) {
+            throw strerror(errno);
+        }
+        opts |= O_NONBLOCK;
+        if (fcntl(sockfd, F_SETFL, opts) == -1) {
+            throw strerror(errno);
+        }
+    }
+
     if (connect(sockfd, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
-        throw strerror(errno);
+        if (errno == EINPROGRESS && nonblock) {
+            return sockfd;
+        } else {
+            throw strerror(errno);
+        }
     }
     return sockfd;
 }
 
 namespace net {
+void TcpStream::set_block() {
+    int opts;
+    if ((opts = fcntl(sockfd, F_GETFL)) == -1) {
+        throw strerror(errno);
+    }
+    opts &= ~O_NONBLOCK;
+    if (fcntl(sockfd, F_SETFL, opts) == -1) {
+        throw strerror(errno);
+    }
+}
+
 TcpStream::TcpStream() {}
 
 /*
  * This is just a wrapper to the `__connect` function above.
  * */
-TcpStream::TcpStream(const char *remote_ip, uint16_t remote_port) {
-    this->sockfd = __connect(__get_address(remote_ip, remote_port));
+TcpStream::TcpStream(const char *remote_ip, uint16_t remote_port,
+                     bool nonblock) {
+    this->sockfd = __connect(__get_address(remote_ip, remote_port), nonblock);
 }
 
 /*
