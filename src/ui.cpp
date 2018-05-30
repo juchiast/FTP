@@ -26,8 +26,27 @@ const static std::map<std::string, enum commandType> commandMenu = {
     {"help", commandType::HELP},       {"?", commandType::HELP}};
 
 const char *help_str =
-    "login\nls\ndir\nput\nmput\nget\nmget\ncd\nlcd\ndelete\nmdelete\nmkdir\nrmd"
-    "ir\npwd\npassive\nactive\nquit\nexit\nhelp\n";
+    "LIST OF COMMANDS:\n"
+    "help\n"
+    "?\n"
+    "login [host] [username] [password]\n"
+    "active\n"
+    "passive\n"
+    "quit\n"
+    "exit\n"
+    "ls [path]\n"
+    "dir [path]\n"
+    "cd <path>\n"
+    "lcd <path>\n"
+    "mkdir <path>\n"
+    "rmdir <path>\n"
+    "pwd\n"
+    "put [local-path] [remote-path]\n"
+    "get [remote-path] [local-path]\n"
+    "delete <path>\n"
+    "mput [path-1] [path-2] ...\n"
+    "mget [path-1] [path-2] ...\n"
+    "mdelete [path-1] [path-2] ...\n";
 
 static std::string myReadline(const char *prompt) {
     char *tmp = readline(prompt);
@@ -313,7 +332,7 @@ int run(void *_ftp) {
         break;
 
     default:
-        cout << "?Invalid command" << endl;
+        cout << "Invalid command. Type 'help' or '?' for help." << endl;
     }
 
     return 0;
