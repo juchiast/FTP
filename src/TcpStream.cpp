@@ -13,7 +13,7 @@
 
 using namespace net;
 
-uint32_t dns(std::string host) {
+static uint32_t dns(std::string host) {
     struct addrinfo hints, *res;
     int errcode;
 
@@ -142,6 +142,9 @@ size_t TcpStream::read(void *buffer, size_t count) {
 size_t TcpStream::write(const void *buffer, size_t count) {
     auto r = send(this->sockfd, buffer, count, 0);
     if (r < 0) {
+        if (errno == EPIPE) {
+            throw errno;
+        }
         throw strerror(errno);
     }
     return r;

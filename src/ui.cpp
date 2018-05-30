@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <vector>
+#include <signal.h>
 using std::cout;
 using std::endl;
 
@@ -207,6 +208,7 @@ static command readCommand() {
 
 namespace ui {
 int run(void *_ftp) {
+    signal(SIGPIPE, SIG_IGN);
     auto f = (ftp::Ftp *)_ftp;
     command cmd;
     cmd = readCommand();

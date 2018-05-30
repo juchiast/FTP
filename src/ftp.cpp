@@ -150,7 +150,7 @@ static bool linux_chdir(const char *path) {
 #define __catch_rep                                                            \
     catch (Reply r) {                                                          \
         _("Server return invalid reply: \n%s", r.reply.c_str());               \
-        return true;                                                           \
+        return false;                                                          \
     }
 // Check the connection
 #define __check_connection                                                     \
@@ -160,50 +160,21 @@ static bool linux_chdir(const char *path) {
             return false;                                                      \
         }                                                                      \
     }
+#define __catch_sigpipe                                                        \
+    catch (int e) {                                                            \
+        if (e == EPIPE) {                                                      \
+            _("Server disconnected");                                          \
+            delete this->cc;                                                   \
+            this->cc = nullptr;                                                \
+            return false;                                                      \
+        } else {                                                               \
+            _("Error: %s", strerror(e));                                       \
+            return false;                                                      \
+        }                                                                      \
+    };
 
 namespace ftp {
 
-/*
- * Note on try-catch writting:
- *
- * Every public functions of this class must not throw.
- * Error must be handled inside the function.
- * Which means that every lines of code must be wrapped in
- * a try-catch block.
- *
- * Most of the error handling in this code is just printing it out,
- * use `__catch_net` and `__catch_rep` macros if you don't need special
- * logic for error handling.
- *
- * For private functions, if no special error handling is needed,
- * it must not catch the error, let the caller catch it.
- * And if server's reply is invalid, it must be thrown.
- *
- * At this time, only two things are thrown:
- * - `char *`, for network errors
- * - `struct Reply`, for invalid reply from server (only invalid,
- *   negative reply must not thrown).
- *
- * */
-
-/*
- * Note on implementation:
- *
- * For each FTP command sent, there are one or more replies.
- * And for a reply, there can be other replies follow it.
- *
- * All reply sequences and meaning of each reply is documented
- * in RFC 959: https://tools.ietf.org/html/rfc959 .
- * Some replies are documented in 'doc/commands.txt'.
- *
- * Implementation must handle all possible replies for each command.
- *
- * There is the `_()` macro to help on printing formatted string,
- * and `R()` to print `struct Reply`.
- *
- * Sometime, logic for positive and negative reply handling is not different,
- * but they should be handle separately.
- * */
 Ftp::Ftp() {}
 Ftp::~Ftp() {
     if (this->cc != nullptr) {
@@ -244,7 +215,7 @@ bool Ftp::login(const string &ip, uint16_t port, const string &name,
             throw rep;
         }
     }
-    __catch_net __catch_rep;
+    __catch_net __catch_rep __catch_sigpipe;
 
     // Send username
     try {
@@ -270,7 +241,7 @@ bool Ftp::login(const string &ip, uint16_t port, const string &name,
             throw rep;
         }
     }
-    __catch_net __catch_rep;
+    __catch_net __catch_rep __catch_sigpipe;
 
     // Send password
     try {
@@ -295,7 +266,7 @@ bool Ftp::login(const string &ip, uint16_t port, const string &name,
             throw rep;
         }
     }
-    __catch_net __catch_rep;
+    __catch_net __catch_rep __catch_sigpipe;
 }
 
 /*
@@ -349,7 +320,7 @@ bool Ftp::list(const string &path) {
             throw rep;
         }
     }
-    __catch_net __catch_rep;
+    __catch_net __catch_rep __catch_sigpipe;
 }
 
 /*
@@ -469,7 +440,7 @@ bool Ftp::mkdir(const string &path) {
             throw rep;
         }
     }
-    __catch_net __catch_rep;
+    __catch_net __catch_rep __catch_sigpipe;
 }
 
 bool Ftp::rmdir(const string &path) {
@@ -493,7 +464,7 @@ bool Ftp::rmdir(const string &path) {
             throw rep;
         }
     }
-    __catch_net __catch_rep;
+    __catch_net __catch_rep __catch_sigpipe;
 }
 
 /*
@@ -546,7 +517,7 @@ bool Ftp::chdir(const string &path) {
             }
         }
     }
-    __catch_net __catch_rep;
+    __catch_net __catch_rep __catch_sigpipe;
 }
 
 bool Ftp::pwd() {
@@ -569,7 +540,7 @@ bool Ftp::pwd() {
             throw rep;
         }
     }
-    __catch_net __catch_rep;
+    __catch_net __catch_rep __catch_sigpipe;
 }
 
 bool Ftp::local_chdir(const string &path) { return linux_chdir(path.c_str()); }
@@ -620,7 +591,7 @@ bool Ftp::remove(const string &path) {
             throw rep;
         }
     }
-    __catch_net __catch_rep;
+    __catch_net __catch_rep __catch_sigpipe;
 }
 
 bool Ftp::quit() {
@@ -639,7 +610,7 @@ bool Ftp::quit() {
             throw rep;
         }
     }
-    __catch_net __catch_rep;
+    __catch_net __catch_rep __catch_sigpipe;
 }
 
 Connector::Connector(net::TcpListener *_listen) {
@@ -709,6 +680,7 @@ bool Ftp::store(const string &local_path, const string &remote_path) {
         case 501:
         case 421:
         case 530:
+        case 550:
             R(rep);
             return false;
         case 125:
@@ -738,7 +710,7 @@ bool Ftp::store(const string &local_path, const string &remote_path) {
             throw rep;
         }
     }
-    __catch_net __catch_rep;
+    __catch_net __catch_rep __catch_sigpipe;
 }
 
 bool Ftp::retrieve(const string &local_path, const string &remote_path) {
@@ -787,7 +759,7 @@ bool Ftp::retrieve(const string &local_path, const string &remote_path) {
             throw rep;
         }
     }
-    __catch_net __catch_rep;
+    __catch_net __catch_rep __catch_sigpipe;
 }
 
 }; // namespace ftp
