@@ -13,16 +13,20 @@ using namespace ui;
 
 // Menu cua cac lenh
 const static std::map<std::string, enum commandType> commandMenu = {
-    {"login", commandType::LOGIN},   {"help", commandType::HELP},
-    {"ls", commandType::LIST_FILE},  {"dir", commandType::LIST_FILE},
-    {"put", commandType::PUT},       {"mput", commandType::MPUT},
-    {"get", commandType::GET},       {"mget", commandType::MGET},
-    {"cd", commandType::CD},         {"lcd", commandType::LCD},
-    {"delete", commandType::DELETE}, {"mdelete", commandType::MDELETE},
-    {"mkdir", commandType::MKDIR},   {"rmdir", commandType::RMKDIR},
-    {"pwd", commandType::PWD},       {"passive", commandType::PASSIVE},
-    {"active", commandType::ACTIVE}, {"quit", commandType::EXIT},
-    {"exit", commandType::EXIT}};
+    {"login", commandType::LOGIN},     {"ls", commandType::LIST_FILE},
+    {"dir", commandType::LIST_FILE},   {"put", commandType::PUT},
+    {"mput", commandType::MPUT},       {"get", commandType::GET},
+    {"mget", commandType::MGET},       {"cd", commandType::CD},
+    {"lcd", commandType::LCD},         {"delete", commandType::DELETE},
+    {"mdelete", commandType::MDELETE}, {"mkdir", commandType::MKDIR},
+    {"rmdir", commandType::RMKDIR},    {"pwd", commandType::PWD},
+    {"passive", commandType::PASSIVE}, {"active", commandType::ACTIVE},
+    {"quit", commandType::EXIT},       {"exit", commandType::EXIT},
+    {"help", commandType::HELP},       {"?", commandType::HELP}};
+
+const char *help_str =
+    "login\nls\ndir\nput\nmput\nget\nmget\ncd\nlcd\ndelete\nmdelete\nmkdir\nrmd"
+    "ir\npwd\npassive\nactive\nquit\nexit\nhelp\n";
 
 static std::string myReadline(const char *prompt) {
     char *tmp = readline(prompt);
@@ -52,10 +56,14 @@ static login *inputLogin(const std::string str) {
     return info;
 }
 
-static dirList *readDir(const std::string str) {
+static dirList *readDir(std::string str) {
     dirList *dirFiles = new dirList;
     if (str == "")
         return dirFiles;
+    while (str[0] == ' ')
+        str.erase(0, 1);
+    while (str[str.length() - 1] == ' ')
+        str.erase(str.length() - 1, 1);
     int splitPos;
     int currPos = 0;
     int i = 0;
@@ -77,6 +85,7 @@ static dirList *readDir(const std::string str) {
     } while (splitPos >= 0);
 
     dirFiles->numDir = i;
+    // std::cout << i << endl;
     return dirFiles;
 }
 
@@ -101,18 +110,18 @@ static fileCommand *inputPut(std::string str) {
     dirList *dirFiles = readDir(str);
     fileCommand *iput = new fileCommand;
 
-    std::cout << dirFiles->numDir << std::endl;
+    // std::cout << dirFiles->numDir << std::endl;
     if (dirFiles->numDir == 0) {
         iput->localFile = myReadline("(local-file) ");
         iput->remote = myReadline("(remote-file) ");
         return iput;
     }
 
-    iput->remote = dirFiles->arrDir[1];
+    iput->localFile = dirFiles->arrDir[0];
     if (dirFiles->numDir > 1) {
-        iput->localFile = dirFiles->arrDir[0];
+        iput->remote = dirFiles->arrDir[1];
     } else
-        iput->localFile = iput->remote;
+        iput->remote = iput->localFile;
 
     delete dirFiles;
     return iput;
@@ -121,8 +130,20 @@ static fileCommand *inputPut(std::string str) {
 static fileCommand *inputGet(std::string str) {
     dirList *dirFiles = readDir(str);
     fileCommand *iget = new fileCommand;
+
+    // std::cout << dirFiles->numDir << std::endl;
+    if (dirFiles->numDir == 0) {
+        iget->localFile = myReadline("(remote-file) ");
+        iget->remote = myReadline("(local-file) ");
+        return iget;
+    }
+
     iget->remote = dirFiles->arrDir[0];
-    iget->localFile = dirFiles->arrDir[1];
+    if (dirFiles->numDir > 1) {
+        iget->localFile = dirFiles->arrDir[1];
+    } else
+        iget->localFile = iget->remote;
+
     delete dirFiles;
     return iget;
 }
@@ -216,8 +237,22 @@ int run(void *_ftp) {
         break;
     }
     case commandType::MPUT: {
+        dirList *dl = (dirList *)cmd.value;
+        for (int i = 0; i < dl->numDir; i++) {
+            auto confirm = myReadline((dl->arrDir[i] + "? ").c_str());
+            if (confirm == "y")
+                f->store(dl->arrDir[i], dl->arrDir[i]);
+        }
+        break;
     }
     case commandType::MGET: {
+        dirList *dl = (dirList *)cmd.value;
+        for (int i = 0; i < dl->numDir; i++) {
+            auto confirm = myReadline((dl->arrDir[i] + "? ").c_str());
+            if (confirm == "y")
+                f->retrieve(dl->arrDir[i], dl->arrDir[i]);
+        }
+        break;
     }
     case commandType::CD: {
         std::string *path = (std::string *)cmd.value;
@@ -268,6 +303,9 @@ int run(void *_ftp) {
         break;
     case commandType::ACTIVE:
         f->set_active();
+        break;
+    case commandType::HELP:
+        std::cout << help_str;
         break;
 
     default:

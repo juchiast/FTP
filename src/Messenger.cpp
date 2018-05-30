@@ -20,8 +20,10 @@ Messenger::Messenger(const TcpStream &ts) : stream(ts) {}
  * Send a message.
  * <CRLF> is automatically appended to the message.
  * */
-void Messenger::send(const std::string &msg) {
-    std::cout << "-> " + msg << std::endl;
+void Messenger::send(const std::string &msg, bool verbose) {
+    if (verbose) {
+        std::cout << "-> " + msg << std::endl;
+    }
     auto buf = msg + CRLF;
     stream.write(buf.c_str(), buf.length());
 }
