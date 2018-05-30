@@ -240,6 +240,7 @@ int run(void *_ftp) {
     }
     case commandType::MPUT: {
         dirList *dl = (dirList *)cmd.value;
+        cout << "Type y to comfirm:" << endl;
         for (int i = 0; i < dl->numDir; i++) {
             auto confirm = myReadline((dl->arrDir[i] + "? ").c_str());
             if (confirm == "y")
@@ -249,6 +250,7 @@ int run(void *_ftp) {
     }
     case commandType::MGET: {
         dirList *dl = (dirList *)cmd.value;
+        cout << "Type y to comfirm:" << endl;
         for (int i = 0; i < dl->numDir; i++) {
             auto confirm = myReadline((dl->arrDir[i] + "? ").c_str());
             if (confirm == "y")

@@ -659,6 +659,7 @@ Connector Ftp::setup_data_connection() {
 
 bool Ftp::store(const string &local_path, const string &remote_path) {
     try {
+        _("Upload from '%s' to '%s'", local_path.c_str(), remote_path.c_str())
         __check_connection;
         auto file = open(local_path.c_str(), O_RDONLY);
         if (file == -1) {
@@ -715,6 +716,7 @@ bool Ftp::store(const string &local_path, const string &remote_path) {
 
 bool Ftp::retrieve(const string &local_path, const string &remote_path) {
     try {
+        _("Download from '%s' to '%s'", remote_path.c_str(), local_path.c_str())
         __check_connection;
         if (!this->port_pasv()) {
             return false;
