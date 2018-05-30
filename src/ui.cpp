@@ -134,8 +134,8 @@ static fileCommand *inputGet(std::string str) {
 
     // std::cout << dirFiles->numDir << std::endl;
     if (dirFiles->numDir == 0) {
-        iget->localFile = myReadline("(remote-file) ");
-        iget->remote = myReadline("(local-file) ");
+        iget->localFile = myReadline("(local-file) ");
+        iget->remote = myReadline("(remote-file) ");
         return iget;
     }
 
