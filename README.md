@@ -1,30 +1,29 @@
 # Requirements
 
 1. Login
-2. Liệt kê danh sách thư mực, tập tin (ls, dir)
-3. Upload 1 file (put)
-4. Dơwnload 1 file (get)
-5. Upload nhiều file (mput)
-6. Dơwnload nhiều file (mget)
-7. Thay đổi đường dẫn trên server (cd)
-8. Thay đổi đường dẫn trên client (lcd)
-9. Xóa 1 file (delete)
-10. Xóa nhiều file (mdelete)
-11. Tạo thư mục (mkdir)
-12. Xóa thư mục rỗng (rmdir)
-13. Hiển thị đường dẫn hiện tại trên server (pwd)
-14. Chuyển sang trạng thái passive (passive)
-15. Thoát khỏi server (quit, exit)
-16. Phải hỗ trợ cả passive và active
+2. List of files, folders (ls, dir)
+3. Upload a file (put)
+4. Download a file (get)
+5. Upload multiple files (mput)
+6. Download multiple files (mget)
+7. Change direction in server side (cd)
+8. Change direction in client side (lcd)
+9. Delete a file (delete)
+10. Delete multiples file (mdelete)
+11. Make a folder (mkdir)
+12. Remove an empty folder (rmdir)
+13. Display current direction in server side (pwd)
+14. Switch to passive mode (passive)
+15. Exit server (quit, exit)
+15. Support both passive mode and active mode
 
-# Code mẫu
+# Sample codes
 https://github.com/jacklam718/ftp/blob/master/ftp_client.py
 
 https://github.com/python/cpython/blob/2.7/Lib/ftplib.py - https://docs.python.org/2/library/ftplib.html
 
-(Cái trên dùng cái dưới)
 
-# abc
+# References
 
 - http://slacksite.com/other/ftp.html
 - https://www.ibm.com/developerworks/library/l-sockpit/
